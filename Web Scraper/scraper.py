@@ -35,4 +35,4 @@ def linkedin_scraper(webpage, page_number):
         file.close()
         print('File closed')
 
-#linkedin_scraper('https://ca.linkedin.com/jobs/software-engineer-jobs?position=1&pageNum=0&currentJobId=3778290848', 0)
+linkedin_scraper('https://ca.linkedin.com/jobs/software-engineer-jobs?position=1&pageNum=0&currentJobId=3778290848', 0)

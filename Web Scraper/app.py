@@ -1,17 +1,21 @@
-# Import the linkedin_scraper function from scraper.py
-#from scraper import linkedin_scraper
-
 import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
+
 import re
 import requests
 import csv
 from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy 
+from flask_sqlalchemy import SQLAlchemy
+import pickle
+
+import linkedin_bot as LinkedInBot  # Import the LinkedInBot class
 
 # Create a new web application object.
 app = Flask(__name__)
@@ -30,14 +34,6 @@ class data(db.Model):
     location = db.Column(db.String(200))
     applyLink = db.Column(db.String(200))
 
-def check_if_Contains_Work_day():
-    global service
-    global driver
-    service = Service(executable_path="/home/vithursh/Coding/EazApply/Web Scraper/chromedriver-linux64/chromedriver")
-    print("\nReads chrome driver\n")
-    driver = webdriver.Chrome(service=service)
-    driver.get(clean_string)
-    print("\nIs fetching link\n")
 
 def read_csv_and_store_in_database(csv_filename):
     with open(csv_filename, 'r') as file:
@@ -52,20 +48,21 @@ def read_csv_and_store_in_database(csv_filename):
                 clean_string = row[3][2:-1]
                 req = requests.get(clean_string)
                 print(clean_string)
-
-                # Checks if each link contain ".workday"
-                check_if_Contains_Work_day()
+                
+                # Calls the Linkedin bot
+                LinkedInBot.logInLinkedin(clean_string)
+                
                 time.sleep(5)
-                driver.quit()
+                #driver.quit()
 
                 # Checks if each link in the database contains a "https" in it
                 if "https:" in row[3]:
                     # Counting to see how much links there are
                     counter+=1
-                    print("IIIIISSSSS")
+                    print("Currect link contain 'https:' in it")
                     print(counter)
                 else:
-                    print("\nDoes not")
+                    print("\nCurrect link does not contain 'https:' in it")
 
                 # Assuming CSV columns match the model columns
                 record = data(title=row[0], company=row[1], location=row[2], applyLink=row[3])
