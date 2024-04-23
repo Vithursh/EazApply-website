@@ -7,6 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 import re
 import requests
@@ -14,26 +16,48 @@ import csv
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 import pickle
+import os
 
 from app import *
 
+count = 0
+global x
+
 def increment_count():
-    count = 0
+    global count
     count+= 1
     print("'count' is:",count)
     return count
 
-def getCookies():
-    with open("linkedin_cookies.pkl", "wb") as file:
-        pickle.dump(driver.get_cookies(), file)
+
+def is_file_found(file_path):
+    print("The path to the directory is:",os.path.isfile(file_path))
+    return os.path.isfile(file_path)
 
 
-def loadCookies():
-    with open("linkedin_cookies.pkl", "rb") as file:
-        cookies = pickle.load(file)
-
+def savecookies():
+    print("saving cookie")
+    time.sleep(10)
+    cookies = driver.get_cookies()
     for cookie in cookies:
-        driver.add_cookie(cookie)
+        if(cookie['name']=='li_at'):
+            cookie['domain']='.linkedin.com'
+            x={
+            'name': 'li_at',
+            'value': cookie['value'],
+            'domain': '.linkedin.com'
+            }
+            break
+    pickle.dump(x , open("cookies.pkl","wb"))
+    print('cookies saved')
+
+
+def loadcookie():
+    print("loading cookie")
+    cookies = pickle.load(open("cookies.pkl", "rb"))
+    print(cookies)
+    driver.add_cookie(cookies)
+    print('loaded cookie')
 
 
 def logInLinkedin(string):
@@ -48,20 +72,22 @@ def logInLinkedin(string):
     #linkdPasswrd = "VithurshEngineerBoss"
 
     # Burner account
-    linkdUsrname = "Vithuchayan@gmail.com"
+    linkdUsrname = "daniel.garcia2001211@gmail.com"
     linkdPasswrd = "Chayan23"
 
-    if increment_count() == 1:
+    if not is_file_found("cookies.pkl"):
         # Logging in
+        print("getting the cookie")
         username = driver.find_element(By.CSS_SELECTOR, ".text-color-text.font-sans.text-md.outline-0.bg-color-transparent.grow")
         username.send_keys(linkdUsrname + Keys.ENTER)
 
         password = driver.find_element(By.ID, "session_password")
         password.send_keys(linkdPasswrd + Keys.ENTER)
-        getCookies()
+        savecookies()
     else:
         print("The 'loadCookies' function is being called")
-        loadCookies()
+        loadcookie()
+        #driver.refresh()
     
     jobPost(string)
 
@@ -78,8 +104,17 @@ def jobPost(c_string):
     WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, id_name)))
 
     # Find the element and click it
+    #try:
     click_apply = driver.find_element(By.ID, id_name)
+       #if id_name != "ember82":
+           # print("Link does not contain 'Apply' button")
+       # else:
     click_apply.click()
+            #print("Link does contain 'Apply' button")
+    #except NoSuchElementException:
+       # print("Element not found, moving on...")
+    #except TimeoutException:
+        #print("Operation timed out, moving on...")
 
     print("Sleeping for 60 seconds...")
     time.sleep(60)
@@ -98,7 +133,7 @@ def check_if_Contains_Work_day(url):
         return True
     else:
         return False
-    
+
 
 def fillOutApplication(url):
     print("You have reached the 'fillOutApplication' function")
