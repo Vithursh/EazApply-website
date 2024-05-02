@@ -2,7 +2,7 @@ import csv
 import requests
 from bs4 import BeautifulSoup
 
-file = open('linkedin-jobs.csv', 'a')
+file = open('File Data/linkedin-jobs.csv', 'a')
 writer = csv.writer(file)
 writer.writerow(['Title', 'Company', 'Location', 'Apply'])
 

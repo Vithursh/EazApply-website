@@ -20,16 +20,9 @@ import pickle
 import os
 
 from app import *
+import fillOutApplication as fill_out_app
 
-count = 0
 global x
-
-def increment_count():
-    global count
-    count+= 1
-    print("'count' is:",count)
-    return count
-
 
 def is_file_found(file_path):
     print("The path to the directory is:",os.path.isfile(file_path))
@@ -49,22 +42,26 @@ def savecookies():
             'domain': '.linkedin.com'
             }
             break
-    pickle.dump(x , open("cookies.pkl","wb"))
+    pickle.dump(x , open("File Data/cookies.pkl","wb"))
     print('cookies saved')
 
 
 def loadcookie():
     print("loading cookie")
-    cookies = pickle.load(open("cookies.pkl", "rb"))
+    cookies = pickle.load(open("File Data/cookies.pkl", "rb"))
     print(cookies)
     driver.add_cookie(cookies)
     print('loaded cookie')
 
 
-def logInLinkedin(string):
-    print(increment_count())
+def setup_driver():
     global driver
     driver = webdriver.Chrome(ChromeDriverManager().install())
+    return driver
+
+
+def logInLinkedin(string):
+    driver = setup_driver()
     driver.get("https://www.linkedin.com/")
     print("Logged into linkedin")
 
@@ -82,7 +79,7 @@ def logInLinkedin(string):
     global linkdPasswrd
     linkdPasswrd = "Chayan23"
 
-    if not is_file_found("cookies.pkl"):
+    if not is_file_found("File Data/cookies.pkl"):
         # Logging in
         print("getting the cookie")
         username = driver.find_element(By.CSS_SELECTOR, ".text-color-text.font-sans.text-md.outline-0.bg-color-transparent.grow")
@@ -139,7 +136,7 @@ def jobPost(c_string):
     if check_if_Contains_Work_day(current_url):
         # Exacute function for filling out the form
         print("Link contains '.myworkdayjobs.com' in it\n")
-        fillOutApplication(current_url)
+        workday_portal(current_url)
     else:
         print("Link does not contain '.myworkdayjobs.com' in it")
 
@@ -152,7 +149,7 @@ def check_if_Contains_Work_day(url):
         return False
 
 
-def fillOutApplication(url):
+def workday_portal(url):
     print("You have reached the 'fillOutApplication' function\n")
 
     class_name_workday = "css-b3pn3b"
@@ -175,7 +172,7 @@ def fillOutApplication(url):
         print("'Apply Manually' element found, proceeding to next step...\n")
 
         # Open CSV file that stores the companies that are 
-        file_path = "Web Scraper/File Data/Added-workday-companies.csv"
+        file_path = "File Data/Added-workday-companies.csv"
 
         # Split the URL into parts based on "/"
         parts = current_url.split("/")
@@ -211,6 +208,10 @@ def fillOutApplication(url):
             create_account()
         else:
             print("Call the log into account function\n")
+            current_workday_url = driver.current_url
+            # Fills out the first page of the application
+            fill_out_app.my_Information_page(current_workday_url)
+            #driver.close()
 
     except NoSuchElementException:
         print("'Apply Manually' element not found, moving on...\n")
@@ -300,3 +301,59 @@ def create_account():
         print("'Create Account button' element found, proceeding to next step...\n")
     except NoSuchElementException:
         print("'Create Account button' element not found, moving on...\n")
+        time.sleep(60)
+
+
+def log_into_account():
+    class_name_username = "input-4"
+    WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, class_name_username)))
+
+    # Find the element and click it
+    try:
+        click_apply_username = driver.find_element(By.ID, class_name_username)
+        click_apply_username.click()
+        click_apply_username.send_keys(linkdUsrname + Keys.TAB)
+        print("'Username button' element found, proceeding to next step...\n")
+    except NoSuchElementException:
+        print("'Username button' element not found, moving on...\n")
+
+
+    linkdPasswrd = "Chayan@23"
+    class_name_password = "input-5"
+    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, class_name_password)))
+
+    # Find the element and click it
+    try:
+        click_apply_password = driver.find_element(By.ID, class_name_password)
+        click_apply_password.click()
+        click_apply_password.send_keys(linkdPasswrd + Keys.TAB)
+        print("'Password button' element found, proceeding to next step...\n")
+    except NoSuchElementException:
+        print("'Password button' element not found, moving on...\n")
+
+
+    class_name_create_account_button = "css-1s1r74k"
+    WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.CLASS_NAME, class_name_create_account_button)))
+
+    # Find the element and click it
+    try:
+        click_apply_create_account_button = driver.find_element(By.CLASS_NAME, class_name_create_account_button)
+        click_apply_create_account_button.click()
+        print("'Create Account button' element found, proceeding to next step...\n")
+    except NoSuchElementException:
+        print("'Create Account button' element not found, moving on...\n")
+
+
+    # Clicks the manually apply button
+    class_name_manually = "css-1s1r74k"
+    WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CLASS_NAME, class_name_manually)))
+
+    # Find the element and click it
+    try:
+        click_apply_manually = driver.find_element(By.CLASS_NAME, class_name_manually)
+        click_apply_manually.click()
+        print("'Apply Manually' element found, proceeding to next step...\n")
+    except NoSuchElementException:
+        print("'Apply Manually' element not found, moving on...\n")
+    
+    

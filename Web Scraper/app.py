@@ -74,7 +74,7 @@ def read_csv_and_store_in_database(csv_filename):
 def index():
     #print("Route called")
     # Provide the CSV filename to the function
-    read_csv_and_store_in_database('Web Scraper/File Data/linkedin-jobs.csv')
+    read_csv_and_store_in_database('File Data/linkedin-jobs.csv')
     displayData = data.query.all()
     #print(f"Number of records: {len(displayData)}")
     return render_template('index.html', data = displayData)  # Replace with your template
