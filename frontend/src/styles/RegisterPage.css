@@ -1,0 +1,31 @@
+.custom-width {
+    width: 100%; /* or whatever width you want */
+    margin: auto; /* to center the input boxes */
+}
+
+.card {
+    width: 75%;
+}
+
+.form-group {
+    margin-bottom: 10px; /* or whatever bottom margin you want */
+}
+
+form {
+    height: 400px; /* or whatever height you want */
+}
+
+.register-label {
+    font-family: Arial, sans-serif; /* or whatever font you want */
+    font-size: 35px; /* or whatever size you want */
+    padding-left: 150px;
+}
+
+.btn-primary {
+    width: 100%;
+    height: 10%;
+}
+
+a {
+    padding-left: 140px;
+}
