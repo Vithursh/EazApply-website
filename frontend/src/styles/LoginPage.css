@@ -15,6 +15,22 @@ form {
     height: 400px; /* or whatever height you want */
 }
 
+.dark-blue{
+    background-color: #1C2728; /* Navy Blue */
+    color: #ffffff; /* White text color */
+}
+
+.dark-blue input {
+    background-color: #1B2229; /* Navy Blue */
+    border-color: #1B2229; /* This changes the border color of the input fields */
+    color: teal; /* This changes the text color of the input fields */
+}
+
+.card-body {
+    background-color: #1C2728; /* Navy Blue */
+    outline: 2px solid #1B2229; /* This changes the outline color of the form */
+}
+
 .register-label {
     font-family: Arial, sans-serif; /* or whatever font you want */
     font-size: 35px; /* or whatever size you want */

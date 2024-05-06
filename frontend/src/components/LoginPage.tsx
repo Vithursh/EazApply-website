@@ -11,9 +11,9 @@ const LoginPage: React.FC = () => {
             <div className="container">
                 <div className="row justify-content-center">
                     <div className="col-md-6">
-                        <div className="card">
+                        <div className="card border-color">
                             <div className="card-body">
-                                <form>
+                                <form className="dark-blue">
                                     <div className="form-group">
                                         <label className="register-label">Login</label>
                                     </div>
