@@ -5,9 +5,9 @@ import { Link } from 'react-router-dom';
 
 const HomePage: React.FC = () => {
     return (
-        <div className="bg-dark text-dark min-vh-100 d-flex align-items-center">
+        <div className="bg-dark text-white min-vh-100 d-flex align-items-center">
+          
         </div>
     );
 };
-
 export default HomePage;

@@ -1,0 +1,81 @@
+.title {
+    color: pink;
+    font-size: 31px; /* or whatever size you want */
+}
+
+.custom-card {
+    background-color: #36454F !important;
+    border-color: 2px solid #1B2229 !important; /* This line adds a 2px wide solid border with the color #1B2229 */
+    position: absolute;
+    top: 50%;
+    left: 20%;
+    transform: translate(-50%, -50%);
+}
+
+.description-heading {
+    color: white !important;
+    font-family: Arial, sans-serif !important; /* or whatever font you want */
+    font-size: 17px !important; /* or whatever size you want */
+}
+
+.pricing {
+    color: black !important;
+}
+
+.feature-list {
+    color: white;
+}
+
+.basic-button-position {
+    position: absolute;
+    top: 90%;
+    left: 49%;
+    transform: translate(-50%, -50%);
+}
+
+.button-size {
+    width: 300px;  /* or any size you want */
+    height: 50px; /* or any size you want */
+}
+
+.standard-card {
+    background-color: #36454F !important;
+    border-color: 2px solid #1B2229 !important; /* This line adds a 2px wide solid border with the color #1B2229 */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.standard-title {
+    color: #fbbf24;
+    font-size: 31px; /* or whatever size you want */
+}
+
+.standard-button-position {
+    position: absolute;
+    top: 90%;
+    left: 49%;
+    transform: translate(-50%, -50%);
+}
+
+.elite-card {
+    background-color: #36454F !important;
+    border-color: 2px solid #1B2229 !important; /* This line adds a 2px wide solid border with the color #1B2229 */
+    position: absolute;
+    top: 50%;
+    left: 80%;
+    transform: translate(-50%, -50%);
+}
+
+.elite-title {
+    color: #bae6fd;
+    font-size: 31px; /* or whatever size you want */
+}
+
+.elite-button-position {
+    position: absolute;
+    top: 90%;
+    left: 49%;
+    transform: translate(-50%, -50%);
+}

@@ -8,10 +8,16 @@
     font-size: 20px !important;
 }
 
-.btn {
+.position-menu {
     margin-top: 8% !important;
 }
 
-.dropdown-menu {
-    width: 0px !important;
+.btn-secondary.dropdown-toggle {
+    background-color: rgba(128, 128, 128, 0);
+    border-color: rgba(128, 128, 128, 0);
+}
+
+.me-custom {
+    left: 1%;
+    width: 130px;
 }

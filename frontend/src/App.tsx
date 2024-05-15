@@ -4,6 +4,18 @@ import LoginPage from "./components/LoginPage";
 import RegisterPage from "./components/RegisterPage";
 import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
+import { BasicPlan, ElitePlan, StandardPlan } from './components/PremiumPage';
+import './index.css';
+
+function PremiumPage() {
+  return (
+    <div>
+      <BasicPlan />
+      <StandardPlan />
+      <ElitePlan />
+    </div>
+  );
+}
 
 function App() {
   return (
@@ -13,6 +25,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/premium" element={<PremiumPage />} />
       </Routes>
     </Router>
   );
