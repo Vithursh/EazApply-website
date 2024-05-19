@@ -34,7 +34,7 @@ form {
 .register-label {
     font-family: Arial, sans-serif; /* or whatever font you want */
     font-size: 35px; /* or whatever size you want */
-    padding-left: 180px;
+    padding-left: 170px !important;
 }
 
 .btn-primary {

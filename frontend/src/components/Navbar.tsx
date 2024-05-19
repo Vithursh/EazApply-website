@@ -17,7 +17,7 @@ const Navbar = () => {
       <div className="container mx-auto flex flex-wrap items-center">
         <div className="flex w-full md:w-1/2 justify-center md:justify-start text-white font-extrabold">
           <Link className="text-white no-underline hover:text-white hover:no-underline navbar-brand" to="/home">
-            EazApply
+            EazApply Beta
           </Link>
         </div>
         <div className="flex w-full pt-2 content-center justify-between md:w-1/2 md:justify-end">
@@ -38,8 +38,8 @@ const Navbar = () => {
             <li className="mr-3">
               <div className="relative inline-block">
                 <button onClick={toggleMenu} className="inline-flex items-center text-gray-200 hover:text-white position-menu">
-                  <AccountCircleIcon />
-                  <span className="ml-1">Profile</span>
+                  <AccountCircleIcon fontSize="large"/>
+                  <span className="ml-1 nav-link">Profile</span>
                   <svg className="fill-current h-4 w-4 mt-1 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5 6l5 5 5-5z"/></svg>
                 </button>
                 {/* Conditionally render the dropdown menu based on isMenuOpen state */}

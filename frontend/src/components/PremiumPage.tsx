@@ -26,7 +26,7 @@ import {
 
 export const BasicPlan = () => {
     return (
-        <div className="bg-dark text-white min-vh-100 d-flex align-items-center">
+        <div className="bg-dark text-white min-vh-100 d-flex align-items-center min-height">
             <Card className="w-[350px] h-[350px] custom-card">
                 <CardHeader>
                 <CardTitle className='title'>Basic Plan</CardTitle>
@@ -49,6 +49,10 @@ export const BasicPlan = () => {
                 </form>
                 </CardContent>
             </Card>
+            {/* <div className="header">
+                <h1>Header</h1>
+                <p>My supercool header</p>
+            </div> */}
         </div>
     );
 };

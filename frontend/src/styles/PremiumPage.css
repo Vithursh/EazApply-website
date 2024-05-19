@@ -4,7 +4,7 @@
 }
 
 .custom-card {
-    background-color: #36454F !important;
+    background-color: #1f2937 !important;
     border-color: 2px solid #1B2229 !important; /* This line adds a 2px wide solid border with the color #1B2229 */
     position: absolute;
     top: 50%;
@@ -39,7 +39,7 @@
 }
 
 .standard-card {
-    background-color: #36454F !important;
+    background-color: #1f2937 !important;
     border-color: 2px solid #1B2229 !important; /* This line adds a 2px wide solid border with the color #1B2229 */
     position: absolute;
     top: 50%;
@@ -60,7 +60,7 @@
 }
 
 .elite-card {
-    background-color: #36454F !important;
+    background-color: #1f2937 !important;
     border-color: 2px solid #1B2229 !important; /* This line adds a 2px wide solid border with the color #1B2229 */
     position: absolute;
     top: 50%;
@@ -78,4 +78,22 @@
     top: 90%;
     left: 49%;
     transform: translate(-50%, -50%);
+}
+
+.header {
+    width: 1290px;
+    height: 50px;
+    padding: 80px;
+    text-align: center;
+    background: #1abc9c;
+    color: white;
+    font-size: 30px;
+    position: absolute;
+    top: 140%;
+    left: 49%;
+    transform: translate(-50%, -50%);
+}
+
+.min-height {
+    min-height: 1000px !important;
 }

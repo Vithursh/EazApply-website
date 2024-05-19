@@ -4,11 +4,27 @@
 }
 
 .card {
-    width: 75%;
+    width: 100%; /* Full width on smaller screens */
+}
+
+/* Media query for laptop screens */
+@media (min-width: 1024px) {
+    .card {
+        width: 85%; /* Adjusted width on larger screens */
+        margin-top: 90px;
+    }
+}
+
+/* Media query for large monitors */
+@media (min-width: 1440px) {
+    .card {
+        width: 75%; /* Further adjusted width on very large screens */
+    }
 }
 
 .form-group {
     margin-bottom: 10px; /* or whatever bottom margin you want */
+    border-radius: 10px !important;
 }
 
 form {
@@ -16,7 +32,7 @@ form {
 }
 
 .dark-blue{
-    background-color: #1C2728; /* Navy Blue */
+    background-color: #1f2937; /* Navy Blue */
     color: #ffffff; /* White text color */
 }
 
@@ -27,14 +43,15 @@ form {
 }
 
 .card-body {
-    background-color: #1C2728; /* Navy Blue */
+    background-color: #1f2937; /* Navy Blue */
     outline: 2px solid #1B2229; /* This changes the outline color of the form */
+    border-radius: 1px !important;
 }
 
 .register-label {
     font-family: Arial, sans-serif; /* or whatever font you want */
     font-size: 35px; /* or whatever size you want */
-    padding-left: 150px;
+    padding-left: 150px !important;
 }
 
 .btn-primary {
