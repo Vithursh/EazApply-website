@@ -42,6 +42,14 @@ form {
     height: 10%;
 }
 
+.customColor {
+    background-color: #1f2937; /* Navy Blue */
+}
+
 a {
     padding-left: 140px;
+}
+
+.forgot-password {
+    padding-left: 1px;
 }

@@ -29,7 +29,9 @@ const RegisterPage: React.FC = () => {
                                         <input type="text" id="lname" name="lname" className="form-control custom-width"/>
                                     </div>
                                     <br></br>
-                                    <button className="btn btn-primary">Register</button>
+                                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded btn-primary">Register</button>
+                                    <br></br>
+                                    <br></br>
                                     <Link to='/login'>Already have an account?</Link>
                                 </form>
                             </div>

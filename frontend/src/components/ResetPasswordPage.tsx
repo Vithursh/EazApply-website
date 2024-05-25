@@ -1,11 +1,11 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '../styles/LoginPage.css'
+import '../styles/ResetPasswordPage.css'
 import RegisterPage from './RegisterPage';
 import Navbar from './Navbar';
 import { Link } from 'react-router-dom';
 
-const LoginPage: React.FC = () => {
+const ResetPasswordPage: React.FC = () => {
     return (
         <div className="bg-dark text-dark min-vh-100 d-flex align-items-center">
             <div className="container">
@@ -13,25 +13,17 @@ const LoginPage: React.FC = () => {
                     <div className="col-md-6">
                         <div className="card border-color">
                             <div className="card-body">
-                                <form className="dark-blue">
-                                    <div className="form-group">
-                                        <label className="register-label">Login</label>
-                                    </div>
+                            <h1 className='reset-password-title'>Need help logging in?</h1>
+                                <form className="dark-blue form-size-reset">
                                     <div className="form-group">
                                         <label htmlFor="lname">Email</label>
                                         <input type="text" id="lname" name="lname" className="form-control custom-width"/>
                                     </div>
-                                    <div className="form-group">
-                                        <label htmlFor="lname">Password</label>
-                                        <input type="text" id="lname" name="lname" className="form-control custom-width"/>
-                                    </div>
-                                    <Link className='forgot-password' to='/forgot'>Forgot your password?</Link>
+                                    <br></br>
+                                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded btn-primary-reset">Reset Password</button>
                                     <br></br>
                                     <br></br>
-                                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded btn-primary">Login</button>
-                                    <br></br>
-                                    <br></br>
-                                    {/* <Link to='/register'>Don't have an account?</Link> */}
+                                    <Link className='no-account' to='/register'>Don't have an account?</Link>
                                 </form>
                             </div>
                         </div>
@@ -42,4 +34,4 @@ const LoginPage: React.FC = () => {
     );
 };
 
-export default LoginPage;
+export default ResetPasswordPage;
