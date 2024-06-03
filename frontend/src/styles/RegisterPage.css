@@ -1,3 +1,16 @@
+.register-message {
+    color: white;
+    padding-right: 160px;
+    padding-bottom: 600px;
+    font-size: 50px;
+}
+
+.little-header {
+    padding-right: 160px;
+    padding-bottom: 450px;
+    font-size: 20px;
+}
+
 .custom-width {
     width: 100%; /* or whatever width you want */
     margin: auto; /* to center the input boxes */

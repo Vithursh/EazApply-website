@@ -5,8 +5,22 @@ import RegisterPage from './RegisterPage';
 import Navbar from './Navbar';
 import { Link } from 'react-router-dom';
 
+export const LoginContext = () => {
+    return (
+        <>
+        <div className='absolute inset-0 flex items-center justify-center z-0 pointer-events-none'>
+            <h1 className='register-message'>Let's get you hired.</h1>
+        </div>
+        <div className='absolute inset-0 flex items-center justify-center z-0 pointer-events-none'>
+            <h5 className='little-header text-gray-500'>Apply to thousands of jobs in one-click and track your status.</h5>
+        </div>
+        </>
+    );
+}
+
 const LoginPage: React.FC = () => {
     return (
+        <>
         <div className="bg-dark text-dark min-vh-100 d-flex align-items-center">
             <div className="container">
                 <div className="row justify-content-center">
@@ -39,6 +53,8 @@ const LoginPage: React.FC = () => {
                 </div>
             </div>
         </div>
+        <LoginContext/>
+        </>
     );
 };
 

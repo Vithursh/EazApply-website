@@ -5,8 +5,22 @@ import RegisterPage from './RegisterPage';
 import Navbar from './Navbar';
 import { Link } from 'react-router-dom';
 
+export const ResetPasswordContext = () => {
+    return (
+        <>
+        <div className='absolute inset-0 flex items-center justify-center z-0 pointer-events-none'>
+            <h1 className='register-message'>Need help logging in?</h1>
+        </div>
+        <div className='absolute inset-0 flex items-center justify-center z-0 pointer-events-none'>
+            <h5 className='little-header text-gray-500'>Type in your email and we will send you a password reset link.</h5>
+        </div>
+        </>
+    );
+}
+
 const ResetPasswordPage: React.FC = () => {
     return (
+        <>
         <div className="bg-dark text-dark min-vh-100 d-flex align-items-center">
             <div className="container">
                 <div className="row justify-content-center">
@@ -31,6 +45,8 @@ const ResetPasswordPage: React.FC = () => {
                 </div>
             </div>
         </div>
+        <ResetPasswordContext/>
+        </>
     );
 };
 
