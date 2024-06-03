@@ -1,0 +1,53 @@
+.vertical-line {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 200px; /* Adjust the width as needed */
+    z-index: 100; /* Ensures the line stays above other content */
+}
+
+.company-title {
+    font-family:'Arial Black', sans-serif;
+    font-size: 30px !important;
+}
+
+.categories{
+    font-family:'Arial Black', sans-serif;
+    font-size: 20px !important;
+}
+
+.nav-item:hover {
+    background-color: rgba(126, 123, 123, 0.5) !important; /* 50% opacity */
+    border-radius: 8px !important;
+    transition: color 1s ease, background-color 1s ease !important;
+}
+
+.welcome-message {
+    color: white;
+    padding-right: 450px;
+    padding-bottom: 750px; 
+}
+
+.job-label {
+    color: white;
+    padding-right: 670px;
+    padding-bottom: 650px; 
+}
+
+.position-cards {
+    padding-left: 620px !important;
+    padding-top: 650px !important;
+}
+
+.move-right {
+    padding-left: 50px;
+}
+
+.move-left {
+    padding-left: 100px;   
+}
+
+.move-header-right {
+    padding-left: 240px;
+}

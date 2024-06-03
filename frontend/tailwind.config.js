@@ -19,6 +19,7 @@ module.exports = {
     extend: {
       colors: {
         customPurple: '#800080', // replace with your custom purple color
+        'light-blue': 'rgba(100, 190, 255, 0.5)', // decreased red and green values
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

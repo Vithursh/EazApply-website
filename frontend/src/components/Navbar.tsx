@@ -23,21 +23,24 @@ const Navbar = () => {
         <div className="flex w-full pt-2 content-center justify-between md:w-1/2 md:justify-end">
           <ul className="list-reset flex justify-between flex-1 md:flex-none items-center">
             <li className="mr-3">
-              <Link className="inline-block py-2 px-4 text-white no-underline nav-link" to="/premium">Premium</Link>
+              <Link className="inline-block py-2 px-4 text-white no-underline nav-link nav-item" to="/premium">Premium</Link>
             </li>
             {/* Uncomment the below line if you have a login route */}
             {/* <li className="mr-3">
               <Link className="inline-block py-2 px-4 text-white no-underline nav-link" to="/login">Login</Link>
             </li> */}
             <li className="mr-3">
-              <Link className="inline-block py-2 px-4 text-white no-underline nav-link" to="/register">Sign up</Link>
+              <Link className="inline-block py-2 px-4 text-white no-underline nav-link nav-item" to="/dashboard">Dashboard</Link>
+            </li>
+            <li className="mr-3">
+              <Link className="inline-block py-2 px-4 text-white no-underline nav-link nav-item" to="/register">Sign up</Link>
             </li>
             <li className="mr-3">
               <a className="inline-block py-2 px-4 text-white no-underline nav-link">|</a>
             </li>
             <li className="mr-3">
               <div className="relative inline-block">
-                <button onClick={toggleMenu} className="inline-flex items-center text-gray-200 hover:text-white position-menu">
+                <button onClick={toggleMenu} className="inline-flex items-center text-gray-200 hover:text-white position-menu nav-item">
                   <AccountCircleIcon fontSize="large"/>
                   <span className="ml-1 nav-link">Profile</span>
                   <svg className="fill-current h-4 w-4 mt-1 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5 6l5 5 5-5z"/></svg>
