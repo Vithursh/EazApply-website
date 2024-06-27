@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Route, Routes, useLocation} from 'react-router-dom';
 import LoginPage from "./components/LoginPage";
 import RegisterPage from "./components/RegisterPage";
@@ -8,6 +8,14 @@ import ResetPasswordPage from './components/ResetPasswordPage';
 import DashboardPage from './components/DashboardPage';
 import { BasicPlan, ElitePlan, StandardPlan } from './components/PremiumPage';
 import './index.css';
+
+// Supabase libaries
+import { createClient } from '@supabase/supabase-js'
+import { Auth } from '@supabase/auth-ui-react'
+import { ThemeSupa } from '@supabase/auth-ui-shared'
+
+// Remove once you figure out how to import enviroment variables
+import { supabase } from './utils/supabaseClient';
 
 function PremiumPage() {
   return (
@@ -20,11 +28,31 @@ function PremiumPage() {
 }
 
 function App() {
+
+  const [session, setSession] = useState(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
+      setSession(session)
+    })    
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+      setSession(session)
+    })    
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   return (
     <Router>
       <Routes>
         <Route path="*" element={<Layout />} />
       </Routes>
+      {!session ? (
+        <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />
+      ) : (
+        <div>Logged in!</div>
+      )}
     </Router>
   );
 }
