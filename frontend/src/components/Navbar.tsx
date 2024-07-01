@@ -36,6 +36,9 @@ const Navbar = () => {
               <Link className="inline-block py-2 px-4 text-white no-underline nav-link nav-item" to="/register">Sign up</Link>
             </li>
             <li className="mr-3">
+              <Link className="inline-block py-2 px-4 text-white no-underline nav-link nav-item" to="/survey">Survey</Link>
+            </li>
+            <li className="mr-3">
               <a className="inline-block py-2 px-4 text-white no-underline nav-link">|</a>
             </li>
             <li className="mr-3">

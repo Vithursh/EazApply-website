@@ -1,11 +1,15 @@
 import React, {useState, useEffect} from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../styles/RegisterPage.css'
-import LoginPage from './LoginPage';
-import Navbar from './Navbar';
+// import LoginPage from './LoginPage';
+// import Navbar from './Navbar';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { fetchData } from '@/utils/fetchData';
+// import { fetchData } from '@/utils/fetchData';
+
+//
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export const RegisterContext = () => {
     return (
@@ -27,24 +31,18 @@ const RegisterPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    // Vaildates email
-    // function isValidEmail(email: string) : boolean {
-    //     // Define a regular expression pattern for email validation.
-    //     const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    //     const tableName = 'users';
-    //     console.log(email);
-
-    //     fetchData(tableName)
-    //     .then(data => {
-    //         if (data !== null) {
-    //         console.log('Data:', data);
-    //         } else {
-    //             console.log("There is no data in the", tableName, "table.")
-    //         }
-    //     });
-
-    //     return pattern.test(email);
-    // }
+    // Notifcation 
+    const notify = (message : string) => {
+        toast(message, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+    };
 
     // Define an asynchronous function to handle form submission
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -68,11 +66,11 @@ const RegisterPage: React.FC = () => {
             const result = response.data;
             if (response.status === 200) {
                 // If the request was successful, display the message from the server
-                alert(result.message);
+                // alert(result.message);
+                notify(result.message);
             } else {
                 // If the request failed, display the error from the server
-                alert(result.error);
-                console.log("DID NOT WORK!!!");
+                notify(result.error);
             }
         } catch (error) {
             console.error(`Error: ${error}`);
@@ -115,6 +113,7 @@ const RegisterPage: React.FC = () => {
             </div>
         </div>
         <RegisterContext/>
+        <ToastContainer theme="dark" />
         </>
     );
 };
