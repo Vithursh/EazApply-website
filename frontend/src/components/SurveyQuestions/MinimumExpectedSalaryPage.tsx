@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../../styles/MinimumExpectedSalaryPage.css'
+import axios from 'axios';
 
 const MinimumExpectedSalaryPage: React.FC = () => {
 
@@ -42,19 +43,40 @@ const MinimumExpectedSalaryPage: React.FC = () => {
 
     const [value, setValue] = useState(150);
 
-    const goToNextPage = () => {
+    const goToNextPage = async () => {
+      // Adds all of the words that the user selected into the "clickedLabels" array 
+      const clickedLabels = buttonLabels.filter((_, index) => isClicked[index]);
+    
       if (value != 0) {
-        navigate('/register');
+        // console.log(clickedLabels.length);
+        try {
+          const response = await axios.post('http://localhost:5000/survey/minimum-expected-salary', {
+            option: value
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+          });
+    
+          const result = response.data;
+          if (response.status === 200) {
+            alert(result.message);
+          } else {
+            alert(result.error);
+          }
+    
+          navigate('/register');
+          console.log("You selected",value+"K USD")
+        } catch (error) {
+          console.error(`Error: ${error}`);
+        }
+      // } else if (clickedLabels.length > 5) {
+      //   notify("You can't select more than 5");
       } else {
         notify("You must select at least 1K");
       }
-      for (let i = 0; i < lengthOfArray; i++) {
-        if (isClicked[i] == true) {
-          console.log(buttonLabels[i], "is getting put into the new array");
-          console.log(isClicked[i]); 
-        }
-      }
-    }
+    };
 
     // State to control the visibility of the dropdown menu
     const [isMenuOpen, setIsMenuOpen] = useState(false);

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../../styles/SkillsEnjoyWorkingWithPage.css'
+import axios from 'axios';
 
 const SkillsEnjoyWorkingWithPage: React.FC = () => {
 
@@ -40,19 +41,39 @@ const SkillsEnjoyWorkingWithPage: React.FC = () => {
       });
     };
 
-    const goToNextPage = () => {
-      if (isClicked.includes(true)) {
-        navigate('/survey/minimum-expected-salary');
+    const goToNextPage = async () => {
+      // Adds all of the words that the user selected into the "clickedLabels" array 
+      const clickedLabels = buttonLabels.filter((_, index) => isClicked[index]);
+    
+      if (clickedLabels.length > 0) {
+        console.log(clickedLabels.length);
+        try {
+          const response = await axios.post('http://localhost:5000/survey/skills-enjoy-working-with', {
+            option: clickedLabels
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+          });
+    
+          const result = response.data;
+          if (response.status === 200) {
+            alert(result.message);
+          } else {
+            alert(result.error);
+          }
+    
+          navigate('/survey/minimum-expected-salary');
+        } catch (error) {
+          console.error(`Error: ${error}`);
+        }
+      // } else if (clickedLabels.length > 3) {
+      //   notify("You can't select more than 3");
       } else {
         notify("You must select at least one");
       }
-      for (let i = 0; i < lengthOfArray; i++) {
-        if (isClicked[i] == true) {
-          console.log(buttonLabels[i], "is getting put into the new array");
-          console.log(isClicked[i]); 
-        }
-      }
-    }
+    };
 
     // State to control the visibility of the dropdown menu
     const [isMenuOpen, setIsMenuOpen] = useState(false);

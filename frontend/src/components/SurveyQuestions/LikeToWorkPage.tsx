@@ -5,6 +5,7 @@ import { BsArrowRight } from "react-icons/bs";
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 const buttonLabels = [
     'Atlanta', 'Austin', 'Boston', 'Chicago', 'Dallas', 'Denver', 'London', 
@@ -12,6 +13,8 @@ const buttonLabels = [
     'Remote in Canada', 'Remote in UK', 'Remote in USA', 'San Francisco Bay Area', 
     'San Diego', 'Seattle', 'Toronto', 'Vancouver', 'Washington D.C.'
   ];
+
+  let lengthOfArray = buttonLabels.length;
 
 const LikeToWorkPage: React.FC = () => {
     const navigate = useNavigate();
@@ -25,8 +28,8 @@ const LikeToWorkPage: React.FC = () => {
         console.log(buttonLabels[index]);
     };
 
-    const notify = () => {
-      toast("You must select at least one", {
+    const notify = (message : string) => {
+      toast(message, {
         position: "top-center",
         autoClose: 5000,
         hideProgressBar: false,
@@ -37,13 +40,39 @@ const LikeToWorkPage: React.FC = () => {
       });
     };
 
-    const goToNextPage = () => {
-      if (isClicked.includes(true)) {
-        navigate('/survey/level-of-experience');
+    const goToNextPage = async () => {
+      // Adds all of the words that the user selected into the "clickedLabels" array 
+      const clickedLabels = buttonLabels.filter((_, index) => isClicked[index]);
+    
+      if (clickedLabels.length > 0 && clickedLabels.length < 3) {
+        console.log(clickedLabels.length);
+        try {
+          const response = await axios.post('http://localhost:5000/survey/like-to-work', {
+            option: clickedLabels
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            withCredentials: true,
+          });
+    
+          const result = response.data;
+          if (response.status === 200) {
+            alert(result.message);
+          } else {
+            alert(result.error);
+          }
+    
+          navigate('/survey/level-of-experience');
+        } catch (error) {
+          console.error(`Error: ${error}`);
+        }
+      } else if (clickedLabels.length > 2) {
+        notify("You can't select more than 2");
       } else {
-        notify();
+        notify("You must select at least one");
       }
-    }
+    };
 
     return (
       <>
@@ -52,6 +81,7 @@ const LikeToWorkPage: React.FC = () => {
             <br></br>
             <h1 className="text-4xl mb-4">Job Preference Test</h1>
             <h2 className="text-2xl mb-2">Where would you like to work?</h2>
+            <p>Select up to 2</p>
             <p>Question 3/8</p>
             <div className="grid grid-cols-3 gap-4 mt-8">
               {buttonLabels.map((label, index) => (
