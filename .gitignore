@@ -27,5 +27,6 @@
 .env
 
 # Backend
-/backend/env
+/backend/myenv
 frontend/src/utils/supabaseClient.ts
+backend/File Data/Raw HTML Pages
