@@ -29,4 +29,5 @@
 # Backend
 /backend/myenv
 frontend/src/utils/supabaseClient.ts
-backend/File Data
+/backend/File Data
+backend/Search Engine/WebCrawler/WebCrawler/spiders/TestCase.py
