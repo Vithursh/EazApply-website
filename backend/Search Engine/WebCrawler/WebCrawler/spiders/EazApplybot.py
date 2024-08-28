@@ -4,7 +4,9 @@ from bs4.element import Tag
 from urllib.parse import urljoin
 from functools import partial
 from collections import deque
+from threading import Lock
 import pandas as pd
+import time
 import os
 import shutil
 import re
@@ -78,8 +80,27 @@ class EazApplySpider(scrapy.Spider):
             "Zero-hours contract": 0
     }
 
+
+    # Initialize the bucket with capacity, refill time, and refill amount
+    def __init__(self, capacity, refill_time, refill_amount, *args, **kwargs):
+        super(EazApplySpider, self).__init__(*args, **kwargs)
+        self.capacity = capacity
+        self.tokens = capacity  # Start with a full bucket
+        self.refill_time = refill_time  # Time interval for refilling tokens
+        self.refill_amount = refill_amount  # Number of tokens to add per refill
+        self.last_refill = time.time()  # Timestamp of the last refill
+        self.lock = Lock()  # Lock to ensure thread safety
+        self.db = {}  # Dictionary to store tokens for different keys
+
+
+    # createBucket function
+    def createBucket(self, key):
+        self.db[key] = self.capacity  # Initialize the bucket for the key with full capacity
+        return self.db[key]  # Return the initial token count
+
+
     # Downloads the seed URL webpages
-    def crawl_start_urls(self, response, new_start_urls):
+    def crawl_start_urls(self, response, new_start_urls):        
         # Takes away the "https//"
         page = new_start_urls.split("//")[-1].split("/")[0]
         filename = f'/home/vithursh/Coding/EazApply/backend/File Data/{self.raw_pages_path}/{page}.html'
@@ -102,6 +123,41 @@ class EazApplySpider(scrapy.Spider):
         yield from self.crawl_loop(response)
 
 
+    # refillBucket function
+    def refillBucket(self, key):
+        print("refillBucket called with key:", key)
+        with self.lock:
+            current_time = time.time()
+            elapsed_time = current_time - self.last_refill
+            print("last_refill is:", self.last_refill)
+            print("tokens is:", self.tokens)
+            if elapsed_time > self.refill_time:
+                tokens_to_add = int(elapsed_time / self.refill_time) * self.refill_amount
+                self.tokens = min(self.capacity, self.tokens + tokens_to_add)
+                self.last_refill = current_time
+                self.db[key] = self.tokens
+                print("Tokens after refill:", self.db[key])            
+            else:
+                print("Tokens after no refill:", self.db[key]) 
+            return self.db[key]
+
+
+    # handleRequest function
+    def handleRequest(self, key):
+        print("handleRequest called with key:", key)
+        self.refillBucket(key)
+        print("Token count after refill:", self.db[key])
+        if self.db[key] > 0:
+            self.db[key] -= 1
+            print("Token deducted. New count:", self.db[key])
+            print("handleRequest returns True")
+            return True
+        else:
+            print("No tokens left to handle request.")
+            print("handleRequest returns False")
+            return False
+
+
     # Loops through all links until all webpages have been visited
     def crawl_loop(self, response):
         # Get all hyperlinks
@@ -110,15 +166,18 @@ class EazApplySpider(scrapy.Spider):
         # Uses the BFS algorithm to vist each link in the books.toscrape website
         if self.sub_urls:
             while self.sub_urls:
-                try:
-                    print("The length of sub_urls is:", len(self.sub_urls))
-                    next_url = self.sub_urls.popleft()
-                    self.crawled_urls.add(next_url)
-                    print("The next_url is:", next_url)
-                    self.csv_urls.append(next_url)
-                    yield scrapy.Request(next_url, callback=partial(self.crawl_sub_urls, url=next_url))
-                except Exception as e:
-                    self.logger.error(f"Error processing URL {next_url}: {str(e)}")
+                if self.handleRequest('server'):
+                    try:
+                        print("The length of sub_urls is:", len(self.sub_urls))
+                        next_url = self.sub_urls.popleft()
+                        self.crawled_urls.add(next_url)
+                        print("The next_url is:", next_url)
+                        self.csv_urls.append(next_url)
+                        yield scrapy.Request(next_url, callback=partial(self.crawl_sub_urls, url=next_url))
+                    except Exception as e:
+                        self.logger.error(f"Error processing URL {next_url}: {str(e)}")
+                else:
+                    print("Ran out of tokens!!!")
             print("sub_urls has", len(self.sub_urls), "now")
         else:
             self.logger.info('All URLs have been processed.')
@@ -145,8 +204,8 @@ class EazApplySpider(scrapy.Spider):
                 # print("The link:", official_Link,"is added")
                 # print(f"Added URL: {official_Link}")  # Debugging statement
 
-            # Removes repetitive sub-links
-            if ".com/index.html" in official_Link:
+            # Removes repetitive sub-links and blacklist certain websites
+            if ".com/index.html" in official_Link or "facebook.com" in official_Link or "linkedin.com" in official_Link or "forum.bell.ca" in official_Link or "youtube.com" in official_Link or "x.com" in official_Link:
                 # print("Contains '.com/index.html'")
                 if official_Link in self.sub_urls:
                     self.sub_urls.remove(official_Link)
@@ -335,6 +394,10 @@ class EazApplySpider(scrapy.Spider):
 
     # Starts the crawling process
     def parse(self, response):
+
+        # Creates the bucket of tokens
+        self.createBucket('server')
+
         # Scrapes seed urls
         for url in self.start_urls:
             yield from self.crawl_start_urls(response, url)
