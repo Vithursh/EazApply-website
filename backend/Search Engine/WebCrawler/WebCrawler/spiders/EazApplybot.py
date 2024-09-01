@@ -10,6 +10,8 @@ import time
 import os
 import shutil
 import re
+import ctypes
+import requests
 
 from scrapy.crawler import Crawler
 
@@ -181,8 +183,6 @@ class EazApplySpider(scrapy.Spider):
             print("sub_urls has", len(self.sub_urls), "now")
         else:
             self.logger.info('All URLs have been processed.')
-            # for links in self.crawled_urls:
-            #     print("Link that has been scraped:", links)
             
             df = pd.DataFrame({"Title": self.csv_urls})
             print(df)
@@ -258,7 +258,7 @@ class EazApplySpider(scrapy.Spider):
         # for i in self.new_links:
         #     print("All the links in the new_links are:",i)
         
-        yield from self.analyzer(response, page, filename, website_name)
+        yield from self.analyzer(response, url, filename, website_name)
 
 
     # Checks how usefull each tag is by giving it a score based on how much matched words it contains from the list
@@ -300,43 +300,23 @@ class EazApplySpider(scrapy.Spider):
 
 
     # Extracts HTML tags from each webpage
-    def analyzer(self, response, URLName, URLFilePathName, website_name):
+    def analyzer(self, response, URL, URLFilePathName, website_name):
         print("The analyzer function has been called!!!")
         with open(URLFilePathName, 'r') as f:
             contents = f.read()
             total_score = [0] * 7
-            
-            # Title Tag
-            soup = BeautifulSoup(contents, 'html.parser')
-            total_score[0] = self.checkUseful(soup.title)
 
-            # Heading Tags
-            soup2 = BeautifulSoup(contents, 'html.parser')
-            headings = [tag.text for tag in soup2.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])]
-            for heading in headings:
-                total_score[2] += self.checkUseful(heading)
+            # Fetch the HTML content
+            page = requests.get(URL)
 
-            # Canonical Tag
-            soup4 = BeautifulSoup(contents, 'html.parser')
-            canonical_tag = soup4.find('link', attrs={'rel': 'canonical'})
-            total_score[4] = self.checkUseful(canonical_tag)
+            # Parse the HTML
+            soup = BeautifulSoup(page.content, 'html.parser')
 
-            # Meta Robots Tag
-            soup5 = BeautifulSoup(contents, 'html.parser')
-            meta_robots = soup5.find('meta', attrs={'name': 'robots'})
-            total_score[5] = self.checkUseful(meta_robots)
+            # Extract all text
+            text = soup.get_text()
 
-            # Structured Data
-            soup6 = BeautifulSoup(contents, 'html.parser')
-            structured_data = soup6.find('script', attrs={'type': 'application/ld+json'})
-            total_score[6] = self.checkUseful(structured_data)
-
-            # Meta Description Tag
-            soup7 = BeautifulSoup(contents, 'html.parser')
-            meta_description = soup7.find_all('meta', attrs={'name': 'description'})
-            for meta in meta_description:
-                content = meta.get('content')
-                total_score[1] = self.checkUseful(content)
+            # get score
+            total_score[0] = self.checkUseful(text)         
 
             count = 0
             for i in total_score:
@@ -347,45 +327,38 @@ class EazApplySpider(scrapy.Spider):
             if count > 9:
                 # If it's not at the end of the 'sub_urls' array
                 if self.sub_urls:
-
-                    # Sanitize the URL to use as a filename
-                    sanitized_url = re.sub(r'[^\w\-_\. ]', '_', URLName)
-
-                    # Remove leading and trailing whitespace
-                    sanitized_url = sanitized_url.strip()
-
-                    # print("the sanitized_url is:", sanitized_url)
-
-                    # Move the HTML file to the indexer folder
-                    indexedURL = f'/home/vithursh/Coding/EazApply/backend/File Data/{self.indexed_pages}/{website_name}/{sanitized_url}'
                     
-                    # print("The indexedURL variable contains:", indexedURL)
-                    
-                    # Create the directory if it doesn't exist, but don't include the filename
-                    os.makedirs(os.path.dirname(indexedURL), exist_ok=True)
-                    
-                    # Check if the source file exists
-                    if not os.path.exists(URLFilePathName):
-                        print(f"Source file {URLFilePathName} does not exist.")
-                    else:
-                        print(f"Source file {URLFilePathName} exists.")
+                    # Remove new lines and replace with commas
+                    cleaned_text = re.sub(r'\s+', ' ', text).strip()
+                    cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1, \2', cleaned_text)
 
-                    # Check if the destination is a directory
-                    if os.path.isdir(indexedURL):
-                        print(f"Destination {indexedURL} is a directory.")
-                    else:
-                        print(f"Destination {indexedURL} is not a directory.")
+                    # Define the path to the shared library
+                    lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/Index.so')
 
-                    # Check if the file exists before moving
-                    if not os.path.exists(indexedURL):
-                        shutil.move(URLFilePathName, indexedURL)
-                    else:
-                        print(f"File {indexedURL} already exists, skipping move operation.")
+                    # Load the shared library
+                    shared_library = ctypes.CDLL(lib_path)
+
+                    # Define the argument and return types
+                    shared_library.indexDocument.argtypes = [ctypes.c_int, ctypes.c_char_p]
+                    shared_library.indexDocument.restype = ctypes.c_void_p
+
+                    # Using 'with' to open and write to the file
+                    with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
+                        file.write(cleaned_text)
+
+                    # Convert the string to bytes
+                    URL_bytes = URL.encode('utf-8')
+                    id = 0
+                    id += 1
+
+                    # Call the function
+                    result = shared_library.indexDocument(id, URL_bytes)
+                    os.remove(URLFilePathName)
 
             # Delete an web page
             else:
                 # Delete the HTML page
-                print("The file path that will be deleted is:", URLFilePathName)
+                # print("The file path that will be deleted is:", URLFilePathName)
                 os.remove(URLFilePathName)
 
         yield from self.crawl_loop(response)
