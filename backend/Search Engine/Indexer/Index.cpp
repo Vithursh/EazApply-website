@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include "sqlite/sqlite3.h"
 
 using namespace std;
 
@@ -15,7 +16,7 @@ void Index::indexDocument(int docID, string websiteLink) {
 	ifstream inputFile("/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt"); 
 	
     // Check if the file is successfully opened 
-    if (!inputFile.is_open()) { 
+    if (!inputFile.is_open()) {
         cerr << "Error opening the file!" << endl; 
         return; 
     } 
@@ -31,6 +32,20 @@ void Index::indexDocument(int docID, string websiteLink) {
 	
     // Close the file 
     inputFile.close();
+
+	sqlite3* DB;
+    int exit = 0;
+
+	// Opens .db file at specified file path
+    exit = sqlite3_open("/home/vithursh/Coding/EazApply/backend/File Data/website_data.db", &DB);
+
+    if (exit) {
+        std::cerr << "Error open DB " << sqlite3_errmsg(DB) << std::endl;
+		return;
+    } else {
+        std::cout << "Opened Database Successfully!" << std::endl;
+    }
+    sqlite3_close(DB);
 
 	// ofstream myfile; // Create an ofstream object
     // myfile.open("/home/vithursh/Coding/EazApply/backend/File Data/test.txt"); // Open a file named "example.txt"
