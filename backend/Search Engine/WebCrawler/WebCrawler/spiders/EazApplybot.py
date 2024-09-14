@@ -333,13 +333,13 @@ class EazApplySpider(scrapy.Spider):
                     cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1, \2', cleaned_text)
 
                     # Define the path to the shared library
-                    lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/Index.so')
+                    lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
 
                     # Load the shared library
                     shared_library = ctypes.CDLL(lib_path)
 
                     # Define the argument and return types
-                    shared_library.indexDocument.argtypes = [ctypes.c_int, ctypes.c_char_p]
+                    shared_library.indexDocument.argtypes = [ctypes.c_char_p]
                     shared_library.indexDocument.restype = ctypes.c_void_p
 
                     # Using 'with' to open and write to the file
@@ -348,11 +348,9 @@ class EazApplySpider(scrapy.Spider):
 
                     # Convert the string to bytes
                     URL_bytes = URL.encode('utf-8')
-                    id = 0
-                    id += 1
 
                     # Call the function
-                    result = shared_library.indexDocument(id, URL_bytes)
+                    result = shared_library.indexDocument(URL_bytes)
                     os.remove(URLFilePathName)
 
             # Delete an web page
