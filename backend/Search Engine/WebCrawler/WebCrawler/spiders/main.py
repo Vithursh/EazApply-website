@@ -1,5 +1,10 @@
 from scrapy.crawler import CrawlerProcess
 from EazApplybot import EazApplySpider
+import os
+import shutil
+import re
+import ctypes
+import requests
 
 def run_spider():
     process = CrawlerProcess(settings={

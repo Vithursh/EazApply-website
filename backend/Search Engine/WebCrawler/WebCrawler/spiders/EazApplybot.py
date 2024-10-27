@@ -324,13 +324,15 @@ class EazApplySpider(scrapy.Spider):
             # print("The total score for this webpage is:", count)
 
             # If the score is greater than or equal to 10
-            if count > 9:
+            if count != 9:
                 # If it's not at the end of the 'sub_urls' array
                 if self.sub_urls:
                     
                     # Remove new lines and replace with commas
-                    cleaned_text = re.sub(r'\s+', ' ', text).strip()
-                    cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1, \2', cleaned_text)
+                    cleaned_text = re.sub(r"[()*&@^%|!.,;:?<>{}\[\]'-]", '', text)
+                    cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
+                    cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
+                    trimmed_text = re.sub(r',\s+', ',', cleaned_text)
 
                     # Define the path to the shared library
                     lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
@@ -344,7 +346,7 @@ class EazApplySpider(scrapy.Spider):
 
                     # Using 'with' to open and write to the file
                     with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
-                        file.write(cleaned_text)
+                        file.write(trimmed_text)
 
                     # Convert the string to bytes
                     URL_bytes = URL.encode('utf-8')
