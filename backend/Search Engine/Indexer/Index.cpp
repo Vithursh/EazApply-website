@@ -102,9 +102,12 @@ void Index::insertData(sqlite3* DB, int rc, int WordID, string word, int Documen
             sqlite3_close(DB);
             return;
         }
-
-        sqlite3_bind_int(stmt, 1, WordID);
-        sqlite3_bind_text(stmt, 2, word.c_str(), -1, SQLITE_STATIC);
+        
+        // If the word is empty don't add it to the database
+        if (word != "") {
+            sqlite3_bind_int(stmt, 1, WordID);
+            sqlite3_bind_text(stmt, 2, word.c_str(), -1, SQLITE_STATIC);
+        }
 
         rc = sqlite3_step(stmt);
         if (rc != SQLITE_DONE) {

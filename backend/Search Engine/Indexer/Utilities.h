@@ -12,6 +12,10 @@ using namespace std;
 
 class Utilities {
     public:
+    Utilities(){};
+    string* stopWords;
     string toLowerCase(string description);
+    string removeStopWords(string* word);
+    ~Utilities(){ delete[] stopWords; };
 };
 #endif

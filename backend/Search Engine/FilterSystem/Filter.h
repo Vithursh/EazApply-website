@@ -15,6 +15,7 @@ extern "C" {
 
 class FilterSystem {
     FilterSystem();
+    void setTfIdf();
     ~FilterSystem();
 };
 #endif
