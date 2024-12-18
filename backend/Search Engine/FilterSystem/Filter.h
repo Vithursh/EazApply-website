@@ -14,8 +14,10 @@ extern "C" {
 }
 
 class FilterSystem {
-    FilterSystem();
-    void setTfIdf();
-    ~FilterSystem();
+    public:
+    FilterSystem() {};
+    std::string getWordBeforeAmpersand(const char* str);
+    std::string getWordAfterAmpersand(const char* str);
+    ~FilterSystem() {};
 };
 #endif

@@ -27,8 +27,40 @@ def run_spider():
     process.crawl(EazApplySpider, capacity=5, refill_time=5, refill_amount=1)
     process.start()
 
-if __name__ == '__main__':
-    run_spider()
+# if __name__ == '__main__':
+#     run_spider()
+
+# text = ["The The scientist's of today think deeply instead of clearly. One must be sane to think clearly, but one can think deeply and be quite insane.", "Work as hard and as much as you want to on the things you like to do the best Pilgrim (Pilgrim #1) | Books","She sells seashells by the seashore, and surely the shells she sells are seashore shells."]
+# URL = ["Youtube.com", "Website2.com", "Website3.com"]
+
+# for i in range(0, 3):
+#     # Remove new lines and replace with commas
+#     cleaned_text = re.sub(r"[()*&@^%|!.,;:?<>{}\[\]'-]", '', text[i])
+#     cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
+#     cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
+#     trimmed_text = re.sub(r',\s+', ',', cleaned_text)
+
+#     # Define the path to the shared library
+#     lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
+
+#     # Load the shared library
+#     shared_library = ctypes.CDLL(lib_path)
+
+#     # Define the argument and return types
+#     shared_library.indexDocument.argtypes = [ctypes.c_char_p]
+#     shared_library.indexDocument.restype = ctypes.c_void_p
+
+#     # Using 'with' to open and write to the file
+#     with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
+#         file.write(trimmed_text)
+
+#     # Convert the string to bytes
+#     URL_bytes = URL[i].encode('utf-8')
+#     id = 0
+#     id += 1
+
+#     # Call the function
+#     result = shared_library.indexDocument(URL_bytes)
 
 # Initialize Supabase client
 supabase: Client = create_client(supabase_url, supabase_key)
@@ -58,8 +90,8 @@ def add_attributes(table_name):
     
     # Call the function
     flattened_array = flatten_data(response.data, fields_to_extract)
-    print("The data: ", flattened_array)
-    print(f"The structre contains {count} numbers of attribute place holders for the {table_name} table.")
+    # print("The data: ", flattened_array)
+    # print(f"The structre contains {count} numbers of attribute place holders for the {table_name} table.")
 
     return flattened_array
 

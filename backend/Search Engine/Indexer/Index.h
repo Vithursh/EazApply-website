@@ -22,7 +22,11 @@ public:
 
     bool checkWordExists(sqlite3* DB, int rc, string word);
 
-    int getWordId(sqlite3* DB, int rc, string word);
+    // int getOccurrenceCount(sqlite3* DB, int rc, string word);
+    // void termFrequency();
+    // int count{};
+    // int termOccurrence{};
+    // void update(sqlite3* DB, int rc, const string& word, int termOccurrence);
     Utilities utilities{};
 
 private:
