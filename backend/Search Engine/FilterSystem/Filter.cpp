@@ -11,32 +11,48 @@
 
 using namespace std;
 
-string FilterSystem::getWordBeforeAmpersand(const char* str) {
-    regex befPattern(R"((\w+)\s*&)");  // Match a word before '&'
-    string strValue(str);
-    size_t pos = strValue.find('&');
-    smatch match;
-    if (pos != string::npos) {
-        if (regex_search(strValue, match, befPattern)) {
-            cout << "Word before '&': " << match[1] << endl;
-            return match[1];
-        }
-    }
-    return "";
+void FilterSystem::setName(std::string name) {
+    m_name = name;
 }
 
-string FilterSystem::getWordAfterAmpersand(const char* str) {
-    regex aftPattern(R"(&\s*(\w+))");  // Match a word after '&'
+std::string FilterSystem::getName() {
+    return m_name;
+}
+
+bool FilterSystem::extractWordsFromString(const char* str) {
+    bool containsSpaces = false;
     string strValue(str);
-    size_t pos = strValue.find('&');
-    smatch match;
+    string word{};
+    // making a string stream
+    stringstream iss(str);
+    // Check if the string conatins atleast one space
+    size_t pos = strValue.find(' ');
     if (pos != string::npos) {
-        if (regex_search(strValue, match, aftPattern)) {
-            cout << "Word after '&': " << match[1] << endl;
-            return match[1];
+        containsSpaces = true;    
+        // Read and print each word.
+        while (iss >> word) {
+            FilterSystem item{};
+            auto it = std::find_if(unwantedChars.begin(), unwantedChars.end(), [word](const std::string &c) {
+                return c == std::string(1, word[0]);
+            });
+
+            if (it == unwantedChars.end()) {
+                item.setName(word);
+                filterSystem.push_back(item);  // Add each match to the vector 
+            }
         }
+    } else {
+        FilterSystem item{};
+        item.setName(strValue);
+        filterSystem.push_back(item);
     }
-    return "";
+
+    cout << "Extracted words/phrases:" << endl;
+    for (auto& items : filterSystem) {
+        cout << "Words in 'filterSystem' is: " << items.getName() << endl;
+    }
+
+    return containsSpaces;
 }
 
 extern "C" {
@@ -49,10 +65,10 @@ extern "C" {
         cout << "The 'companysize' table" << endl;
         for (int i = 1; i < companysizeNum; i++) {
             if (strcmp(companysize[i], "NULL") != 0) {
-                if (filterSystem.getWordBeforeAmpersand(companysize[i]) != "" && filterSystem.getWordAfterAmpersand(companysize[i]) != "") {
-                    cout << "There was an '&' in the string" << endl;
+                if (filterSystem.extractWordsFromString(companysize[i])) {
+                    cout << "There were spaces in the string" << endl;
                 } else {
-                    cout << "There was no '&' in the string" << endl;
+                    cout << "There were no spaces in the string" << endl;
                 }
                 cout << "companysize[" << i << "]: " << companysize[i] << endl;
             }
@@ -63,10 +79,10 @@ extern "C" {
         cout << "The 'industriesexcitedin' table" << endl;
         for (int i = 1; i < industriesexcitedinNum; i++) {
             if (strcmp(industriesexcitedin[i], "NULL") != 0) {
-                if (filterSystem.getWordBeforeAmpersand(industriesexcitedin[i]) != "" && filterSystem.getWordAfterAmpersand(industriesexcitedin[i]) != "") {
-                    cout << "There was an '&' in the string" << endl;
+                if (filterSystem.extractWordsFromString(industriesexcitedin[i])) {
+                    cout << "There were spaces in the string" << endl;
                 } else {
-                    cout << "There was no '&' in the string" << endl;
+                    cout << "There were no spaces in the string" << endl;
                 }
                 cout << "industriesexcitedin[" << i << "]: " << industriesexcitedin[i] << endl;
             }
@@ -77,10 +93,10 @@ extern "C" {
         cout << "The 'levelofexperience' table" << endl;
         for (int i = 1; i < levelofexperienceNum; i++) {
             if (strcmp(levelofexperience[i], "NULL") != 0) {
-                if (filterSystem.getWordBeforeAmpersand(levelofexperience[i]) != "" && filterSystem.getWordAfterAmpersand(levelofexperience[i]) != "") {
-                    cout << "There was an '&' in the string" << endl;
+                if (filterSystem.extractWordsFromString(levelofexperience[i])) {
+                    cout << "There were spaces in the string" << endl;
                 } else {
-                    cout << "There was no '&' in the string" << endl;
+                    cout << "There were no spaces in the string" << endl;
                 }
                 cout << "levelofexperience[" << i << "]: " << levelofexperience[i] << endl;
             }
@@ -91,10 +107,10 @@ extern "C" {
         cout << "The 'liketowork' table" << endl;
         for (int i = 1; i < liketoworkNum; i++) {
             if (strcmp(liketowork[i], "NULL") != 0) {
-                if (filterSystem.getWordBeforeAmpersand(liketowork[i]) != "" && filterSystem.getWordAfterAmpersand(liketowork[i]) != "") {
-                    cout << "There was an '&' in the string" << endl;
+                if (filterSystem.extractWordsFromString(liketowork[i])) {
+                    cout << "There were spaces in the string" << endl;
                 } else {
-                    cout << "There was no '&' in the string" << endl;
+                    cout << "There were no spaces in the string" << endl;
                 }
                 cout << "liketowork[" << i << "]: " << liketowork[i] << endl;
             }
@@ -105,10 +121,10 @@ extern "C" {
         cout << "The 'minimumexpectedsalary' table" << endl;
         for (int i = 1; i < minimumexpectedsalaryNum; i++) {
             if (strcmp(minimumexpectedsalary[i], "NULL") != 0) {
-                if (filterSystem.getWordBeforeAmpersand(minimumexpectedsalary[i]) != "" && filterSystem.getWordAfterAmpersand(minimumexpectedsalary[i]) != "") {
-                    cout << "There was an '&' in the string" << endl;
+                if (filterSystem.extractWordsFromString(minimumexpectedsalary[i])) {
+                    cout << "There were spaces in the string" << endl;
                 } else {
-                    cout << "There was no '&' in the string" << endl;
+                    cout << "There were no spaces in the string" << endl;
                 }
                 cout << "minimumexpectedsalary[" << i << "]: " << minimumexpectedsalary[i] << endl;
             }
@@ -119,10 +135,10 @@ extern "C" {
         cout << "The 'rolesinterestedin' table" << endl;
         for (int i = 1; i < rolesinterestedinNum; i++) {
             if (strcmp(rolesinterestedin[i], "NULL") != 0) {
-                if (filterSystem.getWordBeforeAmpersand(rolesinterestedin[i]) != "" && filterSystem.getWordAfterAmpersand(rolesinterestedin[i]) != "") {
-                    cout << "There was an '&' in the string" << endl;
+                if (filterSystem.extractWordsFromString(rolesinterestedin[i])) {
+                    cout << "There were spaces in the string" << endl;
                 } else {
-                    cout << "There was no '&' in the string" << endl;
+                    cout << "There were no spaces in the string" << endl;
                 }
                 cout << "rolesinterestedin[" << i << "]: " << rolesinterestedin[i] << endl;
             }
@@ -133,10 +149,10 @@ extern "C" {
         cout << "The 'skillsenjoyworkingwith' table" << endl;
         for (int i = 1; i < skillsenjoyworkingwithNum; i++) {
             if (strcmp(skillsenjoyworkingwith[i], "NULL") != 0) {
-                if (filterSystem.getWordBeforeAmpersand(skillsenjoyworkingwith[i]) != "" && filterSystem.getWordAfterAmpersand(skillsenjoyworkingwith[i]) != "") {
-                    cout << "There was an '&' in the string" << endl;
+                if (filterSystem.extractWordsFromString(skillsenjoyworkingwith[i])) {
+                    cout << "There were spaces in the string" << endl;
                 } else {
-                    cout << "There was no '&' in the string" << endl;
+                    cout << "There were no spaces in the string" << endl;
                 }
                 cout << "skillsenjoyworkingwith[" << i << "]: " << skillsenjoyworkingwith[i] << endl;
             }
@@ -147,10 +163,10 @@ extern "C" {
         cout << "The 'valueinrole' table" << endl;
         for (int i = 1; i < valueinroleNum; i++) {
             if (strcmp(valueinrole[i], "NULL") != 0) {
-                if (filterSystem.getWordBeforeAmpersand(valueinrole[i]) != "" && filterSystem.getWordAfterAmpersand(valueinrole[i]) != "") {
-                    cout << "There was an '&' in the string" << endl;
+                if (filterSystem.extractWordsFromString(valueinrole[i])) {
+                    cout << "There were spaces in the string" << endl;
                 } else {
-                    cout << "There was no '&' in the string" << endl;
+                    cout << "There were no spaces in the string" << endl;
                 }
                 cout << "valueinrole[" << i << "]: " << valueinrole[i] << endl;
             }

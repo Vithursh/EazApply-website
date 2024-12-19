@@ -15,9 +15,33 @@ extern "C" {
 
 class FilterSystem {
     public:
+    std::string m_name{};
+    // int m_termFrequency{};
+    // int m_inverseDocumentFrequency{};
+    // int m_TFMultiplyIDF{}
+    std::vector<std::string> unwantedChars = {
+    " ", "\t", "\n",  // Whitespace characters
+    "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "-", "_", "+", "=", "{", "}", "[", "]", "|", "\\", ":", ";", "\"", "'", "<", ">", ",", ".", "?", "/",
+    "\0", "\b", "\r"  // Control characters
+    };
     FilterSystem() {};
-    std::string getWordBeforeAmpersand(const char* str);
-    std::string getWordAfterAmpersand(const char* str);
+    bool extractWordsFromString(const char* str);
+
+    // Getters
+    std::string getName();
+    int getTermFrequency();
+    int getInverseDocumentFrequency();
+    // int TFMultiplyIDF();
+
+    // Setters
+    void setName(std::string name);
+    void setTermFrequency(std::string);
+    void setInverseDocumentFrequency(std::string);
+    // void TFMultiplyIDF();
+
+    // Vectors
+    std::vector<FilterSystem> filterSystem{};
+
     ~FilterSystem() {};
 };
 #endif
