@@ -16,6 +16,7 @@ extern "C" {
 class FilterSystem {
     public:
     std::string m_name{};
+    std::string m_url{};
     // int m_termFrequency{};
     // int m_inverseDocumentFrequency{};
     // int m_TFMultiplyIDF{}
@@ -25,22 +26,26 @@ class FilterSystem {
     "\0", "\b", "\r"  // Control characters
     };
     FilterSystem() {};
+    void loadDatabaseData();
     bool extractWordsFromString(const char* str);
 
     // Getters
     std::string getName();
+    std::string getWebsiteURL();
     int getTermFrequency();
     int getInverseDocumentFrequency();
     // int TFMultiplyIDF();
 
     // Setters
     void setName(std::string name);
+    void setWebsiteURL(std::string url);
     void setTermFrequency(std::string);
     void setInverseDocumentFrequency(std::string);
     // void TFMultiplyIDF();
 
     // Vectors
-    std::vector<FilterSystem> filterSystem{};
+    std::vector<FilterSystem> m_dataBaseData{};
+    std::vector<FilterSystem> m_surveyQuestionAnwsers{};
 
     ~FilterSystem() {};
 };
