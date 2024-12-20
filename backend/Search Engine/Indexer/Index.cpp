@@ -33,20 +33,26 @@ void Index::indexDocument(string websiteLink) {
         return; 
     } 
 
-    // while (getline(inputFile, word, ',')) {
-    //     count++;
-    // }
-	
-    // Read each line of the file and print it to the 
-    // standard output stream 
-    cout << "File Content: " << endl;
+    std::vector<std::string> words{};
+
     while (getline(inputFile, word, ',')) {
-        cout << word << endl; // Print the current line
-		// index[word].emplace_back(docID, position++);
-        int id = rand();
-        // count--;
-        insertData(DB, exit, id, utilities.toLowerCase(word), id, websiteLink, id, id, id);
-		cout << endl << id << endl;
+        // count++;
+        words.push_back(utilities.toLowerCase(word));
+    }
+
+    int position{};
+    int DocumentID = (rand() % 100) + 1;
+    cout << "File Content: " << endl;
+    while (!words.empty()) {
+        // Get first word before removing
+        string currentWord = words.front();
+        words.erase(words.begin());  // Remove first element
+        
+        cout << currentWord << endl;
+        int id = (rand()% 100) + 1;
+        
+        insertData(DB, exit, id, currentWord, DocumentID, websiteLink, id, DocumentID, ++position);
+        cout << endl << id << endl;
     }
 	
     // Close the file 
@@ -101,35 +107,48 @@ void Index::insertData(sqlite3* DB, int rc, int WordID, string word, int Documen
     //     cout << "'" << word << "'" <<" already exists in the database" << endl;        
     // }
 
-    // Inserting data into the Word table
-    const char *sql = "INSERT INTO Word (WordID, word) VALUES (?, ?);";
+    int tempTermId = checkWordExists(DB, rc, word);
+    std::cout << "Checking word: " << word << ", tempTermId: " << tempTermId << std::endl;
 
-    rc = sqlite3_prepare_v2(DB, sql, -1, &stmt, 0);
-    if (rc != SQLITE_OK) {
-        std::cerr << "SQL error: " << sqlite3_errmsg(DB) << std::endl;
-        sqlite3_close(DB);
-        return;
-    }
-    
-    // If the word is not empty add it to the database
-    if (word != "") {
-        sqlite3_bind_int(stmt, 1, WordID);
-        sqlite3_bind_text(stmt, 2, word.c_str(), -1, SQLITE_STATIC);
-    //     if (termOccurrence)
-    //         sqlite3_bind_int(stmt, 3, termOccurrence);
-    }
+    if (tempTermId == 0) {
+        // Inserting data into the Word table
+        const char *sql = "INSERT INTO Word (WordID, word) VALUES (?, ?);";
+        // const char *sql = "INSERT INTO Word (WordID, word) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM Word WHERE word = ?);";
 
-    rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
-        std::cerr << "Execution failed: " << sqlite3_errmsg(DB) << std::endl;
+        rc = sqlite3_prepare_v2(DB, sql, -1, &stmt, 0);
+        if (rc != SQLITE_OK) {
+            std::cerr << "SQL error: " << sqlite3_errmsg(DB) << std::endl;
+            sqlite3_close(DB);
+            return;
+        }
+        
+        // If the word is not empty add it to the database
+        if (word != "") {
+            sqlite3_bind_int(stmt, 1, WordID);
+            sqlite3_bind_text(stmt, 2, word.c_str(), -1, SQLITE_STATIC);
+            // sqlite3_bind_text(stmt, 3, word.c_str(), -1, SQLITE_STATIC);
+        //     if (termOccurrence)
+        //         sqlite3_bind_int(stmt, 3, termOccurrence);
+        }
+
+        rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE) {
+            std::cerr << "Execution failed: " << sqlite3_errmsg(DB) << std::endl;
+        } else {
+            std::cout << "Record inserted successfully for the word table" << std::endl;
+        }
+
+        // Reset the statement to reuse it
+        sqlite3_reset(stmt);
+
+        sqlite3_finalize(stmt);
     } else {
-        std::cout << "Record inserted successfully for the word table" << std::endl;
+        // If the same word is in the database
+        // termOccurrence = getOccurrenceCount(DB, rc, word) + 1;
+        // Gets id of Existing word
+        termID = tempTermId;
+        std::cout << "Word exists. Updated termID to: " << termID << std::endl;
     }
-
-    // Reset the statement to reuse it
-    sqlite3_reset(stmt);
-
-    sqlite3_finalize(stmt);
 
     // Inserting data into the Document table
     const char *sql2 = "INSERT INTO Document (DocumentID, URL) VALUES (?, ?);";
@@ -156,91 +175,68 @@ void Index::insertData(sqlite3* DB, int rc, int WordID, string word, int Documen
 
     sqlite3_finalize(stmt);
 
-    // Inserting data into the Association table
-    const char *sql3 = "INSERT INTO Association (termID, docID, position) VALUES (?, ?, ?);";
+    // Log before inserting into Association
+    std::cout << "Inserting into Association: termID=" << termID << ", docID=" << docID << ", position=" << position << std::endl;
 
-    rc = sqlite3_prepare_v2(DB, sql3, -1, &stmt, 0);
-    if (rc != SQLITE_OK) {
-        std::cerr << "SQL error: " << sqlite3_errmsg(DB) << std::endl;
-        sqlite3_close(DB);
-        return;
+    if (word != "") {
+        // Inserting data into the Association table
+        const char *sql3 = "INSERT INTO Association (termID, docID, position) VALUES (?, ?, ?);";
+
+        rc = sqlite3_prepare_v2(DB, sql3, -1, &stmt, 0);
+        if (rc != SQLITE_OK) {
+            std::cerr << "SQL error: " << sqlite3_errmsg(DB) << std::endl;
+            sqlite3_close(DB);
+            return;
+        }
+
+        sqlite3_bind_int(stmt, 1, termID);
+        sqlite3_bind_int(stmt, 2, docID);
+        sqlite3_bind_int(stmt, 3, position);
+
+        rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE) {
+            std::cerr << "Execution failed: " << sqlite3_errmsg(DB) << std::endl;
+        } else {
+            std::cout << "Record inserted successfully for the Association table" << std::endl;
+        }
+
+        // Reset the statement to reuse it
+        sqlite3_reset(stmt);
+
+        sqlite3_finalize(stmt);
     }
-
-    sqlite3_bind_int(stmt, 1, termID);
-    sqlite3_bind_int(stmt, 2, docID);
-    sqlite3_bind_int(stmt, 3, position);
-
-    rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
-        std::cerr << "Execution failed: " << sqlite3_errmsg(DB) << std::endl;
-    } else {
-        std::cout << "Record inserted successfully for the Association table" << std::endl;
-    }
-
-    // Reset the statement to reuse it
-    sqlite3_reset(stmt);
-
-    sqlite3_finalize(stmt);
 }
 
-bool Index::checkWordExists(sqlite3* DB, int rc, string word) {
+int Index::checkWordExists(sqlite3* DB, int rc, string word) {
     sqlite3_stmt *stmt;
+    int wordId{};
 
-    // Prepare the SQL statement
-    const char *sql = "SELECT word FROM Word WHERE word = ?;";
+    const char *sql = "SELECT WordID FROM Word WHERE word = ?;";
     rc = sqlite3_prepare_v2(DB, sql, -1, &stmt, 0);
     if (rc != SQLITE_OK) {
         std::cerr << "SQL error: " << sqlite3_errmsg(DB) << std::endl;
-        return false;
+        return 0;
     }
 
-    // Convert the first letter to uppercase
-    // string upperCase = word;
-    // upperCase[0] = toupper(upperCase[0]);
-
-    // Bind the word
     sqlite3_bind_text(stmt, 1, word.c_str(), -1, SQLITE_STATIC);
 
-    // Execute the query and check the result
-    bool wordFound = false;
     rc = sqlite3_step(stmt);
     if (rc == SQLITE_ROW) {
-        wordFound = true;
-        std::cout << "Record queried successfully for the word table" << std::endl;
+        wordId = sqlite3_column_int(stmt, 0);
+        std::cout << "Word found with ID: " << wordId << std::endl;
     } else if (rc != SQLITE_DONE) {
-        std::cerr << "Execution failed: " << sqlite3_errmsg(DB) << std::endl;
+        std::cerr << "Query failed: " << sqlite3_errmsg(DB) << std::endl;
     }
 
-    // Reset the statement to reuse it
-    sqlite3_reset(stmt);
-
-    // Convert the first letter to lowercase
-    // string lowerCase = word;
-    // lowerCase[0] = tolower(lowerCase[0]);
-
-    // // Bind the word with the first letter in lowercase
-    // sqlite3_bind_text(stmt, 1, lowerCase.c_str(), -1, SQLITE_STATIC);
-
-    // // Execute the query and check the result
-    // rc = sqlite3_step(stmt);
-    // if (rc == SQLITE_ROW) {
-    //     wordFound = true;
-    //     std::cout << "Record queried successfully for the word table" << std::endl;
-    // } else if (rc != SQLITE_DONE) {
-    //     std::cerr << "Execution failed: " << sqlite3_errmsg(DB) << std::endl;
-    // }
-
-    // Finalize the statement
     sqlite3_finalize(stmt);
-
-    return wordFound;
+    return wordId;
 }
 
-// int Index::getOccurrenceCount(sqlite3* DB, int rc, string word) {
+// int Index::getTermFrequency(sqlite3* DB, int rc, string word) {
 //     sqlite3_stmt *stmt;
 
 //     // Selecting data from the Word table
-//     const char *sql = "SELECT OccurrenceCount FROM Word WHERE word = ?;";
+//     const char *sql = "SELECT termFrequency FROM Word WHERE word = ?;";
 
 //     rc = sqlite3_prepare_v2(DB, sql, -1, &stmt, 0);
 //     if (rc != SQLITE_OK) {

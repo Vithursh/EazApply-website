@@ -20,9 +20,9 @@ public:
     
     void insertData(sqlite3* DB, int rc, int WordID, string word, int DocumentID, string URL, int termID, int docID, int position);
 
-    bool checkWordExists(sqlite3* DB, int rc, string word);
+    int checkWordExists(sqlite3* DB, int rc, string word);
 
-    // int getOccurrenceCount(sqlite3* DB, int rc, string word);
+    // int Index::getTermFrequency(sqlite3* DB, int rc, string word);
     // void termFrequency();
     // int count{};
     // int termOccurrence{};

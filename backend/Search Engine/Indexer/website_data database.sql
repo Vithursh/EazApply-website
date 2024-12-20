@@ -7,7 +7,7 @@
 CREATE TABLE IF NOT EXISTS Word(
     WordID INT NOT NULL UNIQUE,
     word VARCHAR(255) NOT NULL
-    -- OccurrenceCount INT NOT NULL DEFAULT 0
+    -- termFrequency INT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS Document(
@@ -28,3 +28,19 @@ CREATE TABLE IF NOT EXISTS Association(
 -- SELECT * FROM Word;
 
 -- SELECT * FROM Document;
+
+-- Check for invalid WordID in Association table(debbuging purposes):
+
+-- Check for invalid docID in Association table
+-- SELECT DISTINCT docID FROM Association
+-- WHERE docID NOT IN (SELECT DocumentID FROM Document);
+
+-- -- Check for invalid termID in Association table
+-- SELECT DISTINCT termID FROM Association
+-- WHERE termID NOT IN (SELECT WordID FROM Word);
+
+-- -- Check for duplicate rows in Association table
+-- SELECT termID, docID, position, COUNT(*)
+-- FROM Association
+-- GROUP BY termID, docID, position
+-- HAVING COUNT(*) > 1;

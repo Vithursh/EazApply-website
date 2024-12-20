@@ -30,117 +30,117 @@ def run_spider():
 # if __name__ == '__main__':
 #     run_spider()
 
-# text = ["The The scientist's of today think deeply instead of clearly. One must be sane to think clearly, but one can think deeply and be quite insane.", "Work as hard and as much as you want to on the things you like to do the best Pilgrim (Pilgrim #1) | Books","She sells seashells by the seashore, and surely the shells she sells are seashore shells."]
-# URL = ["Youtube.com", "Website2.com", "Website3.com"]
+text = ["The The scientist's of of today think deeply deeply instead of clearly. One must be sane to think clearly, but one can think deeply and be quite insane.", "Work as hard and as much as you want to on the things you like to do the best Pilgrim (Pilgrim #1) | Books","She sells seashells by the seashore, and surely the shells she sells are seashore shells."]
+URL = ["Youtube.com", "Website2.com", "Website3.com"]
 
-# for i in range(0, 3):
-#     # Remove new lines and replace with commas
-#     cleaned_text = re.sub(r"[()*&@^%|!.,;:?<>{}\[\]'-]", '', text[i])
-#     cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
-#     cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
-#     trimmed_text = re.sub(r',\s+', ',', cleaned_text)
+for i in range(0, 3):
+    # Remove new lines and replace with commas
+    cleaned_text = re.sub(r"[()*&@^%|!.,;:?<>{}\[\]'-]", '', text[i])
+    cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
+    cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
+    trimmed_text = re.sub(r',\s+', ',', cleaned_text)
 
-#     # Define the path to the shared library
-#     lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
+    # Define the path to the shared library
+    lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
 
-#     # Load the shared library
-#     shared_library = ctypes.CDLL(lib_path)
+    # Load the shared library
+    shared_library = ctypes.CDLL(lib_path)
 
-#     # Define the argument and return types
-#     shared_library.indexDocument.argtypes = [ctypes.c_char_p]
-#     shared_library.indexDocument.restype = ctypes.c_void_p
+    # Define the argument and return types
+    shared_library.indexDocument.argtypes = [ctypes.c_char_p]
+    shared_library.indexDocument.restype = ctypes.c_void_p
 
-#     # Using 'with' to open and write to the file
-#     with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
-#         file.write(trimmed_text)
+    # Using 'with' to open and write to the file
+    with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
+        file.write(trimmed_text)
 
-#     # Convert the string to bytes
-#     URL_bytes = URL[i].encode('utf-8')
-#     id = 0
-#     id += 1
+    # Convert the string to bytes
+    URL_bytes = URL[i].encode('utf-8')
+    id = 0
+    id += 1
 
-#     # Call the function
-#     result = shared_library.indexDocument(URL_bytes)
+    # Call the function
+    result = shared_library.indexDocument(URL_bytes)
 
 # Initialize Supabase client
-supabase: Client = create_client(supabase_url, supabase_key)
+# supabase: Client = create_client(supabase_url, supabase_key)
 
-def flatten_data(data_list, fields):
-    # Extract the specified fields from each dictionary and flatten the list
-    flattened_data = [item[field] for item in data_list for field in fields]
+# def flatten_data(data_list, fields):
+#     # Extract the specified fields from each dictionary and flatten the list
+#     flattened_data = [item[field] for item in data_list for field in fields]
     
-    # Convert to a NumPy array if desired
-    return np.array(flattened_data)
+#     # Convert to a NumPy array if desired
+#     return np.array(flattened_data)
 
 
-def add_attributes(table_name):
-    response = supabase.table(table_name).select("*").execute()
-    # Specify the fields you want to extract
-    fields_to_extract = ['id']
-    count = 0
-    if response.data:
-        # Check the number of attributes in each dictionary
-        for index, item in enumerate(response.data):
-            num_attributes = len(item)
-            for data in range(1, num_attributes):
-                count+=1
-                fields_to_extract.append(f'option{count}')
-    else:
-        print("Error fetching data")
+# def add_attributes(table_name):
+#     response = supabase.table(table_name).select("*").execute()
+#     # Specify the fields you want to extract
+#     fields_to_extract = ['id']
+#     count = 0
+#     if response.data:
+#         # Check the number of attributes in each dictionary
+#         for index, item in enumerate(response.data):
+#             num_attributes = len(item)
+#             for data in range(1, num_attributes):
+#                 count+=1
+#                 fields_to_extract.append(f'option{count}')
+#     else:
+#         print("Error fetching data")
     
-    # Call the function
-    flattened_array = flatten_data(response.data, fields_to_extract)
-    # print("The data: ", flattened_array)
-    # print(f"The structre contains {count} numbers of attribute place holders for the {table_name} table.")
+#     # Call the function
+#     flattened_array = flatten_data(response.data, fields_to_extract)
+#     # print("The data: ", flattened_array)
+#     # print(f"The structre contains {count} numbers of attribute place holders for the {table_name} table.")
 
-    return flattened_array
+#     return flattened_array
 
 
-# Load the shared library
-lib = ctypes.CDLL('/home/vithursh/Coding/EazApply/backend/Search Engine/FilterSystem/libfilterSystem.so')
+# # Load the shared library
+# lib = ctypes.CDLL('/home/vithursh/Coding/EazApply/backend/Search Engine/FilterSystem/libfilterSystem.so')
 
-# Define the argument types for receiveData (array of C-style strings and an integer)
-lib.receiveData.argtypes = (
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # companysize
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # industriesexcitedin
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # levelofexperience
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # liketowork
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # minimumexpectedsalary
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # rolesinterestedin
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # skillsenjoyworkingwith
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int   # valueinrole
-)
+# # Define the argument types for receiveData (array of C-style strings and an integer)
+# lib.receiveData.argtypes = (
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # companysize
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # industriesexcitedin
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # levelofexperience
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # liketowork
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # minimumexpectedsalary
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # rolesinterestedin
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # skillsenjoyworkingwith
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int   # valueinrole
+# )
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_companysize_array = (ctypes.c_char_p * len(add_attributes("companysize")))(*[str(element).encode('utf-8') for element in add_attributes("companysize")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_companysize_array = (ctypes.c_char_p * len(add_attributes("companysize")))(*[str(element).encode('utf-8') for element in add_attributes("companysize")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_industriesexcitedin_array = (ctypes.c_char_p * len(add_attributes("industriesexcitedin")))(*[str(element).encode('utf-8') for element in add_attributes("industriesexcitedin")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_industriesexcitedin_array = (ctypes.c_char_p * len(add_attributes("industriesexcitedin")))(*[str(element).encode('utf-8') for element in add_attributes("industriesexcitedin")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_levelofexperience_array = (ctypes.c_char_p * len(add_attributes("levelofexperience")))(*[str(element).encode('utf-8') for element in add_attributes("levelofexperience")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_levelofexperience_array = (ctypes.c_char_p * len(add_attributes("levelofexperience")))(*[str(element).encode('utf-8') for element in add_attributes("levelofexperience")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_liketowork_array = (ctypes.c_char_p * len(add_attributes("liketowork")))(*[str(element).encode('utf-8') for element in add_attributes("liketowork")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_liketowork_array = (ctypes.c_char_p * len(add_attributes("liketowork")))(*[str(element).encode('utf-8') for element in add_attributes("liketowork")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_minimumexpectedsalary_array = (ctypes.c_char_p * len(add_attributes("minimumexpectedsalary")))(*[str(element).encode('utf-8') for element in add_attributes("minimumexpectedsalary")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_minimumexpectedsalary_array = (ctypes.c_char_p * len(add_attributes("minimumexpectedsalary")))(*[str(element).encode('utf-8') for element in add_attributes("minimumexpectedsalary")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_rolesinterestedin_array = (ctypes.c_char_p * len(add_attributes("rolesinterestedin")))(*[str(element).encode('utf-8') for element in add_attributes("rolesinterestedin")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_rolesinterestedin_array = (ctypes.c_char_p * len(add_attributes("rolesinterestedin")))(*[str(element).encode('utf-8') for element in add_attributes("rolesinterestedin")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_skillsenjoyworkingwith_array = (ctypes.c_char_p * len(add_attributes("skillsenjoyworkingwith")))(*[str(element).encode('utf-8') for element in add_attributes("skillsenjoyworkingwith")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_skillsenjoyworkingwith_array = (ctypes.c_char_p * len(add_attributes("skillsenjoyworkingwith")))(*[str(element).encode('utf-8') for element in add_attributes("skillsenjoyworkingwith")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_valueinrole_array = (ctypes.c_char_p * len(add_attributes("valueinrole")))(*[str(element).encode('utf-8') for element in add_attributes("valueinrole")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_valueinrole_array = (ctypes.c_char_p * len(add_attributes("valueinrole")))(*[str(element).encode('utf-8') for element in add_attributes("valueinrole")])
 
-# Call the C++ function with the arrays and its lengths
-lib.receiveData(c_companysize_array, len(add_attributes("companysize")), 
-                c_industriesexcitedin_array, len(add_attributes("industriesexcitedin")), 
-                c_levelofexperience_array, len(add_attributes("levelofexperience")), 
-                c_liketowork_array, len(add_attributes("liketowork")), 
-                c_minimumexpectedsalary_array, len(add_attributes("minimumexpectedsalary")), 
-                c_rolesinterestedin_array, len(add_attributes("rolesinterestedin")), 
-                c_skillsenjoyworkingwith_array, len(add_attributes("skillsenjoyworkingwith")), 
-                c_valueinrole_array, len(add_attributes("valueinrole")))
+# # Call the C++ function with the arrays and its lengths
+# lib.receiveData(c_companysize_array, len(add_attributes("companysize")), 
+#                 c_industriesexcitedin_array, len(add_attributes("industriesexcitedin")), 
+#                 c_levelofexperience_array, len(add_attributes("levelofexperience")), 
+#                 c_liketowork_array, len(add_attributes("liketowork")), 
+#                 c_minimumexpectedsalary_array, len(add_attributes("minimumexpectedsalary")), 
+#                 c_rolesinterestedin_array, len(add_attributes("rolesinterestedin")), 
+#                 c_skillsenjoyworkingwith_array, len(add_attributes("skillsenjoyworkingwith")), 
+#                 c_valueinrole_array, len(add_attributes("valueinrole")))
