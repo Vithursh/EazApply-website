@@ -44,3 +44,9 @@ CREATE TABLE IF NOT EXISTS Association(
 -- FROM Association
 -- GROUP BY termID, docID, position
 -- HAVING COUNT(*) > 1;
+
+-- SELECT Word.word, Document.URL FROM Association
+-- INNER JOIN Word ON Association.termID = Word.WordID
+-- INNER JOIN Document ON Association.docID = Document.DocumentID;
+
+-- SELECT * FROM Word WHERE word = 'insane';

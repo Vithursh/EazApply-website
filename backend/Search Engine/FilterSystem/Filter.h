@@ -17,9 +17,10 @@ class FilterSystem {
     public:
     std::string m_name{};
     std::string m_url{};
-    // int m_termFrequency{};
-    // int m_inverseDocumentFrequency{};
-    // int m_TFMultiplyIDF{}
+    double m_termFrequency{};
+    double m_inverseDocumentFrequency{};
+    double m_TFMultiplyIDF{};
+    int m_documentCountContainingWord{};
     std::vector<std::string> unwantedChars = {
     " ", "\t", "\n",  // Whitespace characters
     "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "-", "_", "+", "=", "{", "}", "[", "]", "|", "\\", ":", ";", "\"", "'", "<", ">", ",", ".", "?", "/",
@@ -32,16 +33,18 @@ class FilterSystem {
     // Getters
     std::string getName();
     std::string getWebsiteURL();
-    int getTermFrequency();
-    int getInverseDocumentFrequency();
-    // int TFMultiplyIDF();
+    double getTermFrequency();
+    double getInverseDocumentFrequency();
+    int getDocumentCountContainingWord();
+    double getTFMultiplyIDF();
 
     // Setters
     void setName(std::string name);
     void setWebsiteURL(std::string url);
-    void setTermFrequency(std::string);
-    void setInverseDocumentFrequency(std::string);
-    // void TFMultiplyIDF();
+    void setTermFrequency(double termFrequency);
+    void setInverseDocumentFrequency(double inverseDocumentFrequency);
+    void setDocumentCountContainingWord(int numOfDocumentsContainingWord);
+    void setTFMultiplyIDF(double TFMultiplyIDF);
 
     // Vectors
     std::vector<FilterSystem> m_dataBaseData{};

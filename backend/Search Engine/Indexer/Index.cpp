@@ -41,7 +41,7 @@ void Index::indexDocument(string websiteLink) {
     }
 
     int position{};
-    int DocumentID = (rand() % 100) + 1;
+    int DocumentID = (rand() % 1000) + 1;
     cout << "File Content: " << endl;
     while (!words.empty()) {
         // Get first word before removing
@@ -49,7 +49,7 @@ void Index::indexDocument(string websiteLink) {
         words.erase(words.begin());  // Remove first element
         
         cout << currentWord << endl;
-        int id = (rand()% 100) + 1;
+        int id = (rand()% 1000) + 1;
         
         insertData(DB, exit, id, currentWord, DocumentID, websiteLink, id, DocumentID, ++position);
         cout << endl << id << endl;
