@@ -2,6 +2,8 @@
 #include <string>
 #include <cstring>
 #include <sstream>
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <regex>
 #include <cmath>
@@ -70,8 +72,10 @@ void FilterSystem::loadDatabaseData() {
         }
     }
 
-    int numOfDocuments{}, numOfDocumentsContainingWord{};
-    std::string document{};
+    int numOfDocumentsContainingWord{};
+    std::string lastDocument{};
+
+    // Count the number of different documents
     for (int i = 0; i < m_dataBaseData.size(); i++) {
         if (m_dataBaseData[i].getWebsiteURL() != m_dataBaseData[i+1].getWebsiteURL()) {
             // cout << "The different documents is: " << m_dataBaseData[i].getWebsiteURL() << endl;
@@ -81,9 +85,9 @@ void FilterSystem::loadDatabaseData() {
         
         // Count the number of documents containing the word
         for (size_t j = 0; j < i && j < m_dataBaseData.size(); j++) {
-            document = "";
-            if (m_dataBaseData[j].getName() == m_dataBaseData[i].getName() && document != m_dataBaseData[j].getWebsiteURL()) {
-                document = m_dataBaseData[j].getWebsiteURL();
+            lastDocument = "";
+            if (m_dataBaseData[j].getName() == m_dataBaseData[i].getName() && lastDocument != m_dataBaseData[j].getWebsiteURL()) {
+                lastDocument = m_dataBaseData[j].getWebsiteURL();
                 m_dataBaseData[i].setDocumentCountContainingWord(m_dataBaseData[i].getDocumentCountContainingWord() + 1);
                 cout << "Word '" << m_dataBaseData[i].getName() << "' found in document: " << m_dataBaseData[i].getWebsiteURL() << " (count: " << m_dataBaseData[i].getDocumentCountContainingWord() << ")" << endl;
             } else {
@@ -212,6 +216,14 @@ double FilterSystem::getTermFrequency() {
     return m_termFrequency;
 }
 
+void FilterSystem::setQueryTermFrequency(double queryTermFrequency) {
+    m_queryTermFrequency = queryTermFrequency;
+}
+
+double FilterSystem::getQueryTermFrequency() {
+    return m_queryTermFrequency;
+}
+
 void FilterSystem::setInverseDocumentFrequency(double inverseDocumentFrequency) {
     m_inverseDocumentFrequency = inverseDocumentFrequency;
 }
@@ -249,10 +261,12 @@ bool FilterSystem::extractWordsFromString(const char* str) {
         // Read and print each word.
         while (iss >> word) {
             FilterSystem item{};
+            // Check if the word contains any unwanted characters
             auto it = std::find_if(unwantedChars.begin(), unwantedChars.end(), [word](const std::string &c) {
                 return c == std::string(1, word[0]);
             });
 
+            // If the word does not contain any unwanted characters, add it to the vector
             if (it == unwantedChars.end()) {
                 item.setName(word);
                 m_surveyQuestionAnwsers.push_back(item);  // Add each match to the vector 
@@ -264,12 +278,65 @@ bool FilterSystem::extractWordsFromString(const char* str) {
         m_surveyQuestionAnwsers.push_back(item);
     }
 
-    cout << "Extracted words/phrases:" << endl;
-    for (auto& items : m_surveyQuestionAnwsers) {
-        cout << "Words in 'm_surveyQuestionAnwsers' is: " << items.getName() << endl;
+    return containsSpaces;
+}
+
+void FilterSystem::computeSurveyQuestionsTFIDF() {
+    // Calculate the survey questions term frequency
+    for (size_t i = 0; i < m_surveyQuestionAnwsers.size(); i++) {
+        double numOfDuplicateWords = 0.0;
+        
+        for (size_t j = 0; j <= i && j < m_surveyQuestionAnwsers.size(); j++) {  // Changed to <= to include current word
+            if (m_surveyQuestionAnwsers[j].getName() == m_surveyQuestionAnwsers[i].getName()) {
+                numOfDuplicateWords++;
+            }
+        }
+        m_surveyQuestionAnwsers[i].setQueryTermFrequency(numOfDuplicateWords / m_surveyQuestionAnwsers.size());
     }
 
-    return containsSpaces;
+    int numOfDocumentsContainingWord{};
+    std::string lastDocument{};
+
+    // Count the number of documents containing the word
+    for (int i = 0; i < m_surveyQuestionAnwsers.size(); i++) {
+        for (size_t j = 0; j < i && j < m_dataBaseData.size(); j++) {
+            lastDocument = "";
+            if (m_dataBaseData[j].getName() == m_surveyQuestionAnwsers[i].getName() && lastDocument != m_dataBaseData[j].getWebsiteURL()) {
+                lastDocument = m_dataBaseData[j].getWebsiteURL();
+                m_surveyQuestionAnwsers[i].setDocumentCountContainingWord(m_surveyQuestionAnwsers[i].getDocumentCountContainingWord() + 1);
+                cout << "Word '" << m_surveyQuestionAnwsers[i].getName() << "' found in document: " << m_dataBaseData[i].getWebsiteURL() << " (count: " << m_surveyQuestionAnwsers[i].getDocumentCountContainingWord() << ")" << endl;
+            } else {
+                // If the word is not found in any document (default value is 0)
+                if (m_surveyQuestionAnwsers[i].getDocumentCountContainingWord() == 0) {
+                    m_surveyQuestionAnwsers[i].setDocumentCountContainingWord(m_surveyQuestionAnwsers[i].getDocumentCountContainingWord() + 1);
+                }
+            }
+        }
+    }
+
+    for (auto& entry : m_surveyQuestionAnwsers) {
+        // Prevent division by zero
+        double docCount = entry.getDocumentCountContainingWord();
+        
+        if (docCount <= 0) {
+            // Safety: minimum value of 1 as default
+            docCount = 1;
+        }
+
+        cout << "The document count for '" << entry.getName() << "' is: " << docCount << endl;
+
+        // Calculate the inverse document frequency
+        double idf = 1 + log(numOfDocuments / docCount);
+        entry.setInverseDocumentFrequency(idf);
+        
+        // Calculate the TF * IDF
+        entry.setTFMultiplyIDF(entry.getQueryTermFrequency() * idf);
+    }
+
+    cout << "Extracted words/phrases:" << endl;
+    for (auto& data : m_surveyQuestionAnwsers) {
+        std::cout << "Word: " << data.getName() << ", Term Frequency: " << data.getQueryTermFrequency() << ", Inverse Document Frequency: " << data.getInverseDocumentFrequency() << ", TF * IDF: " << data.getTFMultiplyIDF() << std::endl;
+    }
 }
 
 extern "C" {
@@ -285,12 +352,15 @@ extern "C" {
         cout << "The 'companysize' table" << endl;
         for (int i = 1; i < companysizeNum; i++) {
             if (strcmp(companysize[i], "NULL") != 0) {
-                if (instance.extractWordsFromString(companysize[i])) {
+                std::string lowerCaseStr(companysize[i]);
+                std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+                if (instance.extractWordsFromString(lowerCaseStr.c_str())) {
                     cout << "There were spaces in the string" << endl;
                 } else {
                     cout << "There were no spaces in the string" << endl;
                 }
-                cout << "companysize[" << i << "]: " << companysize[i] << endl;
+                // cout << "companysize[" << i << "]: " << companysize[i] << endl;
             }
         }
         cout << endl;
@@ -299,12 +369,15 @@ extern "C" {
         cout << "The 'industriesexcitedin' table" << endl;
         for (int i = 1; i < industriesexcitedinNum; i++) {
             if (strcmp(industriesexcitedin[i], "NULL") != 0) {
-                if (instance.extractWordsFromString(industriesexcitedin[i])) {
+                std::string lowerCaseStr(industriesexcitedin[i]);
+                std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+                if (instance.extractWordsFromString(lowerCaseStr.c_str())) {
                     cout << "There were spaces in the string" << endl;
                 } else {
                     cout << "There were no spaces in the string" << endl;
                 }
-                cout << "industriesexcitedin[" << i << "]: " << industriesexcitedin[i] << endl;
+                // cout << "industriesexcitedin[" << i << "]: " << industriesexcitedin[i] << endl;
             }
         }
         cout << endl;
@@ -313,12 +386,15 @@ extern "C" {
         cout << "The 'levelofexperience' table" << endl;
         for (int i = 1; i < levelofexperienceNum; i++) {
             if (strcmp(levelofexperience[i], "NULL") != 0) {
-                if (instance.extractWordsFromString(levelofexperience[i])) {
+                std::string lowerCaseStr(levelofexperience[i]);
+                std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+                if (instance.extractWordsFromString(lowerCaseStr.c_str())) {
                     cout << "There were spaces in the string" << endl;
                 } else {
                     cout << "There were no spaces in the string" << endl;
                 }
-                cout << "levelofexperience[" << i << "]: " << levelofexperience[i] << endl;
+                // cout << "levelofexperience[" << i << "]: " << levelofexperience[i] << endl;
             }
         }
         cout << endl;
@@ -327,12 +403,15 @@ extern "C" {
         cout << "The 'liketowork' table" << endl;
         for (int i = 1; i < liketoworkNum; i++) {
             if (strcmp(liketowork[i], "NULL") != 0) {
-                if (instance.extractWordsFromString(liketowork[i])) {
+                std::string lowerCaseStr(liketowork[i]);
+                std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+                if (instance.extractWordsFromString(lowerCaseStr.c_str())) {
                     cout << "There were spaces in the string" << endl;
                 } else {
                     cout << "There were no spaces in the string" << endl;
                 }
-                cout << "liketowork[" << i << "]: " << liketowork[i] << endl;
+                // cout << "liketowork[" << i << "]: " << liketowork[i] << endl;
             }
         }
         cout << endl;
@@ -341,12 +420,15 @@ extern "C" {
         cout << "The 'minimumexpectedsalary' table" << endl;
         for (int i = 1; i < minimumexpectedsalaryNum; i++) {
             if (strcmp(minimumexpectedsalary[i], "NULL") != 0) {
-                if (instance.extractWordsFromString(minimumexpectedsalary[i])) {
+                std::string lowerCaseStr(minimumexpectedsalary[i]);
+                std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+                if (instance.extractWordsFromString(lowerCaseStr.c_str())) {
                     cout << "There were spaces in the string" << endl;
                 } else {
                     cout << "There were no spaces in the string" << endl;
                 }
-                cout << "minimumexpectedsalary[" << i << "]: " << minimumexpectedsalary[i] << endl;
+                // cout << "minimumexpectedsalary[" << i << "]: " << minimumexpectedsalary[i] << endl;
             }
         }
         cout << endl;
@@ -355,12 +437,15 @@ extern "C" {
         cout << "The 'rolesinterestedin' table" << endl;
         for (int i = 1; i < rolesinterestedinNum; i++) {
             if (strcmp(rolesinterestedin[i], "NULL") != 0) {
-                if (instance.extractWordsFromString(rolesinterestedin[i])) {
+                std::string lowerCaseStr(rolesinterestedin[i]);
+                std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+                if (instance.extractWordsFromString(lowerCaseStr.c_str())) {
                     cout << "There were spaces in the string" << endl;
                 } else {
                     cout << "There were no spaces in the string" << endl;
                 }
-                cout << "rolesinterestedin[" << i << "]: " << rolesinterestedin[i] << endl;
+                // cout << "rolesinterestedin[" << i << "]: " << rolesinterestedin[i] << endl;
             }
         }
         cout << endl;
@@ -369,12 +454,15 @@ extern "C" {
         cout << "The 'skillsenjoyworkingwith' table" << endl;
         for (int i = 1; i < skillsenjoyworkingwithNum; i++) {
             if (strcmp(skillsenjoyworkingwith[i], "NULL") != 0) {
-                if (instance.extractWordsFromString(skillsenjoyworkingwith[i])) {
+                std::string lowerCaseStr(skillsenjoyworkingwith[i]);
+                std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+                if (instance.extractWordsFromString(lowerCaseStr.c_str())) {
                     cout << "There were spaces in the string" << endl;
                 } else {
                     cout << "There were no spaces in the string" << endl;
                 }
-                cout << "skillsenjoyworkingwith[" << i << "]: " << skillsenjoyworkingwith[i] << endl;
+                // cout << "skillsenjoyworkingwith[" << i << "]: " << skillsenjoyworkingwith[i] << endl;
             }
         }
         cout << endl;
@@ -383,13 +471,18 @@ extern "C" {
         cout << "The 'valueinrole' table" << endl;
         for (int i = 1; i < valueinroleNum; i++) {
             if (strcmp(valueinrole[i], "NULL") != 0) {
-                if (instance.extractWordsFromString(valueinrole[i])) {
+                std::string lowerCaseStr(valueinrole[i]);
+                std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+                if (instance.extractWordsFromString(lowerCaseStr.c_str())) {
                     cout << "There were spaces in the string" << endl;
                 } else {
                     cout << "There were no spaces in the string" << endl;
                 }
-                cout << "valueinrole[" << i << "]: " << valueinrole[i] << endl;
+                // cout << "valueinrole[" << i << "]: " << valueinrole[i] << endl;
             }
         }
+
+        instance.computeSurveyQuestionsTFIDF();
     }
 }

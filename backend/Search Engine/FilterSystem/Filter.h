@@ -17,7 +17,9 @@ class FilterSystem {
     public:
     std::string m_name{};
     std::string m_url{};
+    int numOfDocuments{};
     double m_termFrequency{};
+    double m_queryTermFrequency{};
     double m_inverseDocumentFrequency{};
     double m_TFMultiplyIDF{};
     int m_documentCountContainingWord{};
@@ -29,11 +31,13 @@ class FilterSystem {
     FilterSystem() {};
     void loadDatabaseData();
     bool extractWordsFromString(const char* str);
+    void computeSurveyQuestionsTFIDF();
 
     // Getters
     std::string getName();
     std::string getWebsiteURL();
     double getTermFrequency();
+    double getQueryTermFrequency();
     double getInverseDocumentFrequency();
     int getDocumentCountContainingWord();
     double getTFMultiplyIDF();
@@ -42,6 +46,7 @@ class FilterSystem {
     void setName(std::string name);
     void setWebsiteURL(std::string url);
     void setTermFrequency(double termFrequency);
+    void setQueryTermFrequency(double queryTermFrequency);
     void setInverseDocumentFrequency(double inverseDocumentFrequency);
     void setDocumentCountContainingWord(int numOfDocumentsContainingWord);
     void setTFMultiplyIDF(double TFMultiplyIDF);
