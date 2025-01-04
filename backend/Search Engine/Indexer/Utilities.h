@@ -16,6 +16,10 @@ class Utilities {
     string* stopWords;
     string toLowerCase(string description);
     string removeStopWords(string* word);
+    std::string trimSpace(std::string str);
+    void writeToCSV(int termID, int docID, int position, const std::string& word);
+    // Split compound words
+    std::string splitCamelCase(const std::string& word);
     ~Utilities(){ delete[] stopWords; };
 };
 #endif

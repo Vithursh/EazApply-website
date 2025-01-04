@@ -6,10 +6,20 @@ from functools import partial
 from collections import deque
 from threading import Lock
 import pandas as pd
+import nltk
+import spacy
+import wordninja
+from nltk.corpus import words as nltk_words
+from spellchecker import SpellChecker
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+import unicodedata
 import time
 import os
 import shutil
+import logging
 import re
+import csv
 import ctypes
 import requests
 
@@ -27,6 +37,15 @@ class EazApplySpider(scrapy.Spider):
     csv_urls = []
 
     new_links = []
+
+    # Word splitting function
+    nltk.download('punkt_tab')
+    nltk.download('punkt')
+    nltk.download('wordnet')
+    nltk.download('omw-1.4')  # Optional for enhanced WordNet support
+
+    # Load the spaCy model
+    nlp = spacy.load("en_core_web_sm")
 
     # Words to match to
     job_terms = {
@@ -93,6 +112,13 @@ class EazApplySpider(scrapy.Spider):
         self.last_refill = time.time()  # Timestamp of the last refill
         self.lock = Lock()  # Lock to ensure thread safety
         self.db = {}  # Dictionary to store tokens for different keys
+        # Configure logging
+        # logging.basicConfig(
+        #     level=logging.INFO,
+        #     filename='/home/vithursh/Coding/EazApply/backend/File Data/scraper.log',
+        #     filemode="w",
+        #     format="%(asctime)s - %(levelname)s - %(message)s"
+        # )
 
 
     # createBucket function
@@ -299,6 +325,97 @@ class EazApplySpider(scrapy.Spider):
         return count
 
 
+    def remove_short_words(self, input_str):
+        input_words = input_str.split()
+        final_word = []
+        for word in input_words:
+            if len(word) != 1:
+                final_word.append(word)
+        return ' '.join(final_word)
+
+
+    # Word splitting function
+    def split_compound_word(self, input_str):
+        tokens = word_tokenize(input_str)
+
+        # Split each compound word
+        not_compound_words = []
+        for token in tokens:
+            # Ignore non-alphabetical tokens
+            if token.isalpha():
+                split_words = wordninja.split(token)
+                # If the word is a compound word, split the words
+                if len(split_words) != 1:
+                    for word in split_words:
+                        not_compound_words.append(word)
+                # If the word is not a compound word, keep it as is
+                else:
+                    not_compound_words.append(token)
+
+        # Join lemmatized words into a sentence
+        return ' '.join(not_compound_words)
+
+
+    # Function to convert the input string to lemmatized form
+    def get_lemmatize(self, input_str):
+        # Process the input string with spaCy NLP pipeline
+        doc = self.nlp(input_str.lower())
+
+        # Lemmatize each token and filter out punctuation
+        lemmatized = []
+        for token in doc:
+            if token.is_alpha:  # Ignore non-alphabetical tokens
+                lemma = token.lemma_  # Get the lemmatized word
+                lemmatized.append(lemma)
+
+        # Join lemmatized words into a sentence and return
+        return self.split_compound_word(self.remove_short_words(' '.join(lemmatized)))
+
+
+    # Function to append a string to a CSV file(debugging purposes)
+    def website_text_logs(self, URL, text):
+        file_path = "/home/vithursh/Coding/EazApply/backend/File Data/log_website_text.csv"
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        
+        # Check if the file exists to determine if we need to write the header
+        file_exists = os.path.isfile(file_path)
+        
+        # Open the file in append mode and write the text
+        with open(file_path, 'a', newline='') as file:
+            writer = csv.writer(file)
+            # Write the header only if the file does not exist
+            if not file_exists:
+                writer.writerow(["Website name", "Website text"])
+            writer.writerow([URL, text])
+
+
+    def scrape_page(self, url):
+        # Creating an object
+        # logger = logging.getLogger()
+        try:
+            # logger.info("This is a test log message.")
+            # Fetch the HTML content
+            response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
+            response.raise_for_status()  # Raise an error for HTTP issues
+
+            # Parse the HTML
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            # Extract text
+            content = soup.get_text(strip=True)
+
+            # Log the visited URL and extracted content
+            # logger.info(f"Visited: {url}")
+            # logger.info(f"Content: {content}")  # Log first 200 characters
+
+            return content
+        except requests.exceptions.RequestException as e:
+            # Log errors
+            # logger.error(f"Failed to scrape {url}: {e}")
+            return None
+
+
     # Extracts HTML tags from each webpage
     def analyzer(self, response, URL, URLFilePathName, website_name):
         print("The analyzer function has been called!!!")
@@ -307,53 +424,55 @@ class EazApplySpider(scrapy.Spider):
             total_score = [0] * 7
 
             # Fetch the HTML content
-            page = requests.get(URL)
+            # page = requests.get(URL)
 
-            # Parse the HTML
-            soup = BeautifulSoup(page.content, 'html.parser')
+            # # Parse the HTML
+            # soup = BeautifulSoup(page.content, 'html.parser')
 
             # Extract all text
-            text = soup.get_text()
+            text = self.scrape_page(URL)
 
             # get score
-            total_score[0] = self.checkUseful(text)         
+            # total_score[0] = self.checkUseful(text)         
 
-            count = 0
-            for i in total_score:
-                count += i
+            # count = 0
+            # for i in total_score:
+            #     count += i
             # print("The total score for this webpage is:", count)
 
             # If the score is greater than or equal to 10
-            if count != 9:
-                # If it's not at the end of the 'sub_urls' array
-                if self.sub_urls:
-                    
-                    # Remove new lines and replace with commas
-                    cleaned_text = re.sub(r"[()*&@^%|!.,;:?<>{}\[\]'-]", '', text)
-                    cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
-                    cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
-                    trimmed_text = re.sub(r',\s+', ',', cleaned_text)
+            if True:
+                stemmed_word = self.get_lemmatize(text)
+                # Remove new lines and replace with commas
+                cleaned_text = re.sub(r"[()*&#@^%|!.,;:?<>{}/\[\]\\'\"-]", '', stemmed_word)
+                cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
+                cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
+                trimmed_text = re.sub(r',\s+', ',', cleaned_text)
+                trimmed_text = unicodedata.normalize('NFD', trimmed_text).encode('ascii', 'ignore').decode('utf-8')
 
-                    # Define the path to the shared library
-                    lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
+                # Define the path to the shared library
+                lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
 
-                    # Load the shared library
-                    shared_library = ctypes.CDLL(lib_path)
+                # Load the shared library
+                shared_library = ctypes.CDLL(lib_path)
 
-                    # Define the argument and return types
-                    shared_library.indexDocument.argtypes = [ctypes.c_char_p]
-                    shared_library.indexDocument.restype = ctypes.c_void_p
+                # Define the argument and return types
+                shared_library.indexDocument.argtypes = [ctypes.c_char_p]
+                shared_library.indexDocument.restype = ctypes.c_void_p
 
-                    # Using 'with' to open and write to the file
-                    with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
-                        file.write(trimmed_text)
+                # Using 'with' to open and write to the file
+                with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
+                    file.write(trimmed_text)
 
-                    # Convert the string to bytes
-                    URL_bytes = URL.encode('utf-8')
+                # Log text
+                self.website_text_logs(URL, trimmed_text)
 
-                    # Call the function
-                    result = shared_library.indexDocument(URL_bytes)
-                    os.remove(URLFilePathName)
+                # Convert the string to bytes
+                URL_bytes = URL.encode('utf-8')
+
+                # Call the function
+                result = shared_library.indexDocument(URL_bytes)
+                os.remove(URLFilePathName)
 
             # Delete an web page
             else:

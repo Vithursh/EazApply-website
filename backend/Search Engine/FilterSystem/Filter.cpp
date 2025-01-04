@@ -136,7 +136,12 @@ void FilterSystem::loadDatabaseData() {
     
     cout << endl << "The data inside the 'm_dataBaseData' vector is:" << endl;
     for (auto& data : m_dataBaseData) {
-        std::cout << "Word: " << data.getName() << ", URL: " << data.getWebsiteURL() << ", Term Frequency: " << data.getTermFrequency() << ", Inverse Document Frequency: " << data.getInverseDocumentFrequency() << ", TF * IDF: " << data.getTFMultiplyIDF() << std::endl;
+        if (data.getName() == "work") {
+            std::cout << "Word: " << data.getName() << ", URL: " << data.getWebsiteURL() << ", Term Frequency: " << data.getTermFrequency() << ", Inverse Document Frequency: " << data.getInverseDocumentFrequency() << ", TF * IDF: " << data.getTFMultiplyIDF() << std::endl;
+            cout << "There are '" << m_dataBaseData.size() << " many words in the 'm_dataBaseData' vector." << endl;
+            cout << "The max size a vector can hold is: " << m_dataBaseData.max_size() << endl;
+            break;
+        }
     }
 
     // Free the statement when done.

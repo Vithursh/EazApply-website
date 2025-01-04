@@ -4,6 +4,13 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 import os
 import shutil
+import wordninja
+import nltk
+import spacy
+from nltk.corpus import words as nltk_words
+from spellchecker import SpellChecker
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
 import re
 import ctypes
 import requests
@@ -27,21 +34,80 @@ def run_spider():
     process.crawl(EazApplySpider, capacity=5, refill_time=5, refill_amount=1)
     process.start()
 
-# if __name__ == '__main__':
-#     run_spider()
+if __name__ == '__main__':
+    run_spider()
 
-# text = ["The The scientist's of of want today think deeply deeply instead of clearly. One must be sane to think clearly, but one can think deeply and be quite insane.", "Work as hard and as much as of you want to on the things you like to do the best Pilgrim (Pilgrim #1) | Books","She sells of seashells by the seashore, and want surely the shells she sells are seashore shells."]
+
+# def remove_short_words(input_str):
+#     input_words = input_str.split()
+#     final_word = []
+#     for word in input_words:
+#         if len(word) != 1:
+#             final_word.append(word)
+#     return ' '.join(final_word)
+
+
+# nltk.download('punkt_tab')
+# nltk.download('punkt')
+# nltk.download('wordnet')
+# nltk.download('omw-1.4')  # Optional for enhanced WordNet support
+
+# # Word splitting function
+# def split_compound_word(input_str):
+#     tokens = word_tokenize(input_str)
+
+#     # Split each compound word
+#     not_compound_words = []
+#     for token in tokens:
+#         # Ignore non-alphabetical tokens
+#         if token.isalpha():
+#             split_words = wordninja.split(token)
+#             # If the word is a compound word, split the words
+#             if len(split_words) != 1:
+#                 for word in split_words:
+#                     not_compound_words.append(word)
+#             # If the word is not a compound word, keep it as is
+#             else:
+#                 not_compound_words.append(token)
+
+#     # Join lemmatized words into a sentence
+#     return ' '.join(not_compound_words)
+
+
+# # Load the spaCy model
+# nlp = spacy.load("en_core_web_sm")
+
+# def get_spacy_lemmatize(input_str):
+#     # Process the input string with spaCy NLP pipeline
+#     doc = nlp(input_str.lower())
+
+#     # Lemmatize each token and filter out punctuation
+#     lemmatized = []
+#     for token in doc:
+#         if token.is_alpha:  # Ignore non-alphabetical tokens
+#             lemma = token.lemma_  # Get the lemmatized word
+#             lemmatized.append(lemma)
+
+#     # Join lemmatized words into a sentence and return
+#     return split_compound_word(remove_short_words(' '.join(lemmatized)))
+
+
+# text = ["The The scientist's of of want today think deeply deeply instead of clearly. One must be sane to think clearly, but one can think deeply and be quite insane.", "Work as hard and as much as of you want to on the things you like to do the best Pilgrim (Pilgrim #1) | Books","In the quiet village of Meadowbrook, a young boy named Oliver stumbled upon an ancient map hidden in his grandfather’s attic. The map depicted a forgotten realm, lost to time and memory. With a heart full of adventure, Oliver set out to uncover the secrets of the map. His journey led him through dense forests, across raging rivers, and into mysterious caves, each step bringing him closer to a treasure beyond his wildest dreams fouryearold battle."]
 # URL = ["Youtube.com", "Website2.com", "Website3.com"]
 
 # for i in range(0, 3):
-#     # Remove new lines and replace with commas
-#     cleaned_text = re.sub(r"[()*&@^%|!.,;:?<>{}\[\]'-]", '', text[i])
-#     cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
-#     cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
-#     trimmed_text = re.sub(r',\s+', ',', cleaned_text)
+    # print("Using spacy:")
+    # stemmed_spcy_word = get_spacy_lemmatize(text[i])
+    # print("The new string is:", stemmed_spcy_word, '\n')
+    # Remove new lines and replace with commas
+    # cleaned_text = re.sub(r"[()*&@^%|!.,;:?<>{}\[\]'-]", '', stemmed_word)
+    # cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
+    # cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
+    # trimmed_text = re.sub(r',\s+', ',', cleaned_text)
+    # print("The new string is:", trimmed_text, '\n')
 
 #     # Define the path to the shared library
-#     lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
+#     # lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
 
 #     # Load the shared library
 #     shared_library = ctypes.CDLL(lib_path)
@@ -63,84 +129,84 @@ def run_spider():
 #     result = shared_library.indexDocument(URL_bytes)
 
 # Initialize Supabase client
-supabase: Client = create_client(supabase_url, supabase_key)
+# supabase: Client = create_client(supabase_url, supabase_key)
 
-def flatten_data(data_list, fields):
-    # Extract the specified fields from each dictionary and flatten the list
-    flattened_data = [item[field] for item in data_list for field in fields]
+# def flatten_data(data_list, fields):
+#     # Extract the specified fields from each dictionary and flatten the list
+#     flattened_data = [item[field] for item in data_list for field in fields]
     
-    # Convert to a NumPy array if desired
-    return np.array(flattened_data)
+#     # Convert to a NumPy array if desired
+#     return np.array(flattened_data)
 
 
-def add_attributes(table_name):
-    response = supabase.table(table_name).select("*").execute()
-    # Specify the fields you want to extract
-    fields_to_extract = ['id']
-    count = 0
-    if response.data:
-        # Check the number of attributes in each dictionary
-        for index, item in enumerate(response.data):
-            num_attributes = len(item)
-            for data in range(1, num_attributes):
-                count+=1
-                fields_to_extract.append(f'option{count}')
-    else:
-        print("Error fetching data")
+# def add_attributes(table_name):
+#     response = supabase.table(table_name).select("*").execute()
+#     # Specify the fields you want to extract
+#     fields_to_extract = ['id']
+#     count = 0
+#     if response.data:
+#         # Check the number of attributes in each dictionary
+#         for index, item in enumerate(response.data):
+#             num_attributes = len(item)
+#             for data in range(1, num_attributes):
+#                 count+=1
+#                 fields_to_extract.append(f'option{count}')
+#     else:
+#         print("Error fetching data")
     
-    # Call the function
-    flattened_array = flatten_data(response.data, fields_to_extract)
-    # print("The data: ", flattened_array)
-    # print(f"The structre contains {count} numbers of attribute place holders for the {table_name} table.")
+#     # Call the function
+#     flattened_array = flatten_data(response.data, fields_to_extract)
+#     # print("The data: ", flattened_array)
+#     # print(f"The structre contains {count} numbers of attribute place holders for the {table_name} table.")
 
-    return flattened_array
+#     return flattened_array
 
 
-# Load the shared library
-lib = ctypes.CDLL('/home/vithursh/Coding/EazApply/backend/Search Engine/FilterSystem/libfilterSystem.so')
+# # Load the shared library
+# lib = ctypes.CDLL('/home/vithursh/Coding/EazApply/backend/Search Engine/FilterSystem/libfilterSystem.so')
 
-# Define the argument types for receiveData (array of C-style strings and an integer)
-lib.receiveData.argtypes = (
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # companysize
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # industriesexcitedin
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # levelofexperience
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # liketowork
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # minimumexpectedsalary
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # rolesinterestedin
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # skillsenjoyworkingwith
-    ctypes.POINTER(ctypes.c_char_p), ctypes.c_int   # valueinrole
-)
+# # Define the argument types for receiveData (array of C-style strings and an integer)
+# lib.receiveData.argtypes = (
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # companysize
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # industriesexcitedin
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # levelofexperience
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # liketowork
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # minimumexpectedsalary
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # rolesinterestedin
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int,  # skillsenjoyworkingwith
+#     ctypes.POINTER(ctypes.c_char_p), ctypes.c_int   # valueinrole
+# )
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_companysize_array = (ctypes.c_char_p * len(add_attributes("companysize")))(*[str(element).encode('utf-8') for element in add_attributes("companysize")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_companysize_array = (ctypes.c_char_p * len(add_attributes("companysize")))(*[str(element).encode('utf-8') for element in add_attributes("companysize")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_industriesexcitedin_array = (ctypes.c_char_p * len(add_attributes("industriesexcitedin")))(*[str(element).encode('utf-8') for element in add_attributes("industriesexcitedin")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_industriesexcitedin_array = (ctypes.c_char_p * len(add_attributes("industriesexcitedin")))(*[str(element).encode('utf-8') for element in add_attributes("industriesexcitedin")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_levelofexperience_array = (ctypes.c_char_p * len(add_attributes("levelofexperience")))(*[str(element).encode('utf-8') for element in add_attributes("levelofexperience")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_levelofexperience_array = (ctypes.c_char_p * len(add_attributes("levelofexperience")))(*[str(element).encode('utf-8') for element in add_attributes("levelofexperience")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_liketowork_array = (ctypes.c_char_p * len(add_attributes("liketowork")))(*[str(element).encode('utf-8') for element in add_attributes("liketowork")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_liketowork_array = (ctypes.c_char_p * len(add_attributes("liketowork")))(*[str(element).encode('utf-8') for element in add_attributes("liketowork")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_minimumexpectedsalary_array = (ctypes.c_char_p * len(add_attributes("minimumexpectedsalary")))(*[str(element).encode('utf-8') for element in add_attributes("minimumexpectedsalary")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_minimumexpectedsalary_array = (ctypes.c_char_p * len(add_attributes("minimumexpectedsalary")))(*[str(element).encode('utf-8') for element in add_attributes("minimumexpectedsalary")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_rolesinterestedin_array = (ctypes.c_char_p * len(add_attributes("rolesinterestedin")))(*[str(element).encode('utf-8') for element in add_attributes("rolesinterestedin")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_rolesinterestedin_array = (ctypes.c_char_p * len(add_attributes("rolesinterestedin")))(*[str(element).encode('utf-8') for element in add_attributes("rolesinterestedin")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_skillsenjoyworkingwith_array = (ctypes.c_char_p * len(add_attributes("skillsenjoyworkingwith")))(*[str(element).encode('utf-8') for element in add_attributes("skillsenjoyworkingwith")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_skillsenjoyworkingwith_array = (ctypes.c_char_p * len(add_attributes("skillsenjoyworkingwith")))(*[str(element).encode('utf-8') for element in add_attributes("skillsenjoyworkingwith")])
 
-# Convert Python strings to C-style strings (ctypes array of `c_char_p`)
-c_valueinrole_array = (ctypes.c_char_p * len(add_attributes("valueinrole")))(*[str(element).encode('utf-8') for element in add_attributes("valueinrole")])
+# # Convert Python strings to C-style strings (ctypes array of `c_char_p`)
+# c_valueinrole_array = (ctypes.c_char_p * len(add_attributes("valueinrole")))(*[str(element).encode('utf-8') for element in add_attributes("valueinrole")])
 
-# Call the C++ function with the arrays and its lengths
-lib.receiveData(c_companysize_array, len(add_attributes("companysize")), 
-                c_industriesexcitedin_array, len(add_attributes("industriesexcitedin")), 
-                c_levelofexperience_array, len(add_attributes("levelofexperience")), 
-                c_liketowork_array, len(add_attributes("liketowork")), 
-                c_minimumexpectedsalary_array, len(add_attributes("minimumexpectedsalary")), 
-                c_rolesinterestedin_array, len(add_attributes("rolesinterestedin")), 
-                c_skillsenjoyworkingwith_array, len(add_attributes("skillsenjoyworkingwith")), 
-                c_valueinrole_array, len(add_attributes("valueinrole")))
+# # Call the C++ function with the arrays and its lengths
+# lib.receiveData(c_companysize_array, len(add_attributes("companysize")), 
+#                 c_industriesexcitedin_array, len(add_attributes("industriesexcitedin")), 
+#                 c_levelofexperience_array, len(add_attributes("levelofexperience")), 
+#                 c_liketowork_array, len(add_attributes("liketowork")), 
+#                 c_minimumexpectedsalary_array, len(add_attributes("minimumexpectedsalary")), 
+#                 c_rolesinterestedin_array, len(add_attributes("rolesinterestedin")), 
+#                 c_skillsenjoyworkingwith_array, len(add_attributes("skillsenjoyworkingwith")), 
+#                 c_valueinrole_array, len(add_attributes("valueinrole")))

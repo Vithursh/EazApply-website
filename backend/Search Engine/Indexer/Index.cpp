@@ -36,12 +36,11 @@ void Index::indexDocument(string websiteLink) {
     std::vector<std::string> words{};
 
     while (getline(inputFile, word, ',')) {
-        // count++;
         words.push_back(utilities.toLowerCase(word));
     }
 
     int position{};
-    int DocumentID = (rand() % 1000) + 1;
+    int DocumentID = rand();
     cout << "File Content: " << endl;
     while (!words.empty()) {
         // Get first word before removing
@@ -49,9 +48,9 @@ void Index::indexDocument(string websiteLink) {
         words.erase(words.begin());  // Remove first element
         
         cout << currentWord << endl;
-        int id = (rand()% 1000) + 1;
+        int id = rand();
         
-        insertData(DB, exit, id, currentWord, DocumentID, websiteLink, id, DocumentID, ++position);
+        insertData(DB, exit, id, utilities.trimSpace(currentWord), DocumentID, websiteLink, id, DocumentID, ++position);
         cout << endl << id << endl;
     }
 	
@@ -97,6 +96,7 @@ void Index::executeSQLFile(sqlite3* DB, int rc) {
 
 void Index::insertData(sqlite3* DB, int rc, int WordID, string word, int DocumentID, string URL, int termID, int docID, int position) {
     sqlite3_stmt *stmt;
+    bool docStatus = false, wordStatus = false;
 
     // Check if word exists in database
     // if (checkWordExists(DB, rc, word)) {
@@ -112,7 +112,7 @@ void Index::insertData(sqlite3* DB, int rc, int WordID, string word, int Documen
 
     if (tempTermId == 0) {
         // Inserting data into the Word table
-        const char *sql = "INSERT INTO Word (WordID, word) VALUES (?, ?);";
+        const char *sql = "INSERT INTO Word (WordID, word) VALUES (?, LOWER(?));";
         // const char *sql = "INSERT INTO Word (WordID, word) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM Word WHERE word = ?);";
 
         rc = sqlite3_prepare_v2(DB, sql, -1, &stmt, 0);
@@ -134,8 +134,10 @@ void Index::insertData(sqlite3* DB, int rc, int WordID, string word, int Documen
         rc = sqlite3_step(stmt);
         if (rc != SQLITE_DONE) {
             std::cerr << "Execution failed: " << sqlite3_errmsg(DB) << std::endl;
+            wordStatus = false;
         } else {
             std::cout << "Record inserted successfully for the word table" << std::endl;
+            wordStatus = true;
         }
 
         // Reset the statement to reuse it
@@ -145,7 +147,7 @@ void Index::insertData(sqlite3* DB, int rc, int WordID, string word, int Documen
     } else {
         // If the same word is in the database
         // termOccurrence = getOccurrenceCount(DB, rc, word) + 1;
-        // Gets id of Existing word
+        // Gets id of existing word
         termID = tempTermId;
         std::cout << "Word exists. Updated termID to: " << termID << std::endl;
     }
@@ -166,14 +168,20 @@ void Index::insertData(sqlite3* DB, int rc, int WordID, string word, int Documen
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
         std::cerr << "Execution failed: " << sqlite3_errmsg(DB) << std::endl;
+        docStatus = false;
     } else {
         std::cout << "Record inserted successfully for the document table" << std::endl;
+        docStatus = true;
     }
 
     // Reset the statement to reuse it
     sqlite3_reset(stmt);
 
     sqlite3_finalize(stmt);
+
+    if (wordStatus == false && docStatus == false) {
+        utilities.writeToCSV(termID, docID, position, word);
+    }
 
     // Log before inserting into Association
     std::cout << "Inserting into Association: termID=" << termID << ", docID=" << docID << ", position=" << position << std::endl;

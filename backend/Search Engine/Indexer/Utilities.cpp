@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <cstdlib>
+#include <regex>
 #include "sqlite/sqlite3.h"
 #include "Utilities.h"
 
@@ -142,4 +143,46 @@ string Utilities::removeStopWords(string* word) {
 
     // If not a stop word, return the original word
     return *word;
+}
+
+string Utilities::trimSpace(string str) {
+    // Remove leading spaces and newlines
+    while (!str.empty() && (str.front() == ' ' || str.front() == '\n')) {
+        str.erase(0, 1);
+    }
+
+    // Remove trailing spaces and newlines
+    while (!str.empty() && (str.back() == ' ' || str.back() == '\n')) {
+        str.pop_back();
+    }
+
+    return str;
+}
+
+// Used for debugging
+void Utilities::writeToCSV(int termID, int docID, int position, const std::string& word) {
+    std::ofstream csvFile;
+    try {
+        csvFile.open("/home/vithursh/Coding/EazApply/backend/File Data/not_index_data.csv", std::ios::app);  // Append mode
+        if (!csvFile.is_open()) {
+            std::cerr << "Failed to open CSV file" << std::endl;
+            return;
+        }
+        
+        // Write header if file is empty
+        if (csvFile.tellp() == 0) {
+            csvFile << "TermID,DocID,Position,Word\n";
+        }
+        
+        // Write data
+        csvFile << termID << "," 
+                << docID << "," 
+                << position << "," 
+                << word << "\n";
+                
+        csvFile.close();
+    } catch (const std::exception& e) {
+        std::cerr << "Error writing to CSV: " << e.what() << std::endl;
+        if (csvFile.is_open()) csvFile.close();
+    }
 }

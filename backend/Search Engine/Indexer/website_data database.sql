@@ -7,7 +7,6 @@
 CREATE TABLE IF NOT EXISTS Word(
     WordID INT NOT NULL UNIQUE,
     word VARCHAR(255) NOT NULL
-    -- termFrequency INT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS Document(
@@ -15,10 +14,10 @@ CREATE TABLE IF NOT EXISTS Document(
     URL VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS Association(
-    termID INT,
-    docID INT,
-    position INT,
+CREATE TABLE IF NOT EXISTS Association (
+    termID INT NOT NULL,
+    docID INT NOT NULL,
+    position INT NOT NULL,
     FOREIGN KEY (termID) REFERENCES Word(WordID),
     FOREIGN KEY (docID) REFERENCES Document(DocumentID)
 );
@@ -49,4 +48,4 @@ CREATE TABLE IF NOT EXISTS Association(
 -- INNER JOIN Word ON Association.termID = Word.WordID
 -- INNER JOIN Document ON Association.docID = Document.DocumentID;
 
--- SELECT * FROM Word WHERE word = 'insane';
+-- SELECT * FROM Word WHERE word = 'work';
