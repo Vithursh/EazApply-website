@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS Association (
 
 -- Check for invalid WordID in Association table(debbuging purposes):
 
--- Check for invalid docID in Association table
+-- -- Check for invalid docID in Association table
 -- SELECT DISTINCT docID FROM Association
 -- WHERE docID NOT IN (SELECT DocumentID FROM Document);
 
@@ -44,8 +44,20 @@ CREATE TABLE IF NOT EXISTS Association (
 -- GROUP BY termID, docID, position
 -- HAVING COUNT(*) > 1;
 
--- SELECT Word.word, Document.URL FROM Association
+-- DELETE FROM Association 
+-- WHERE rowid IN (
+--     SELECT rowid FROM Association 
+--     ORDER BY rowid ASC 
+--     LIMIT 100000
+-- );
+
+-- SELECT COUNT(*) FROM Association;
+
+-- SELECT Word.word, Document.URL 
+-- FROM Association
 -- INNER JOIN Word ON Association.termID = Word.WordID
 -- INNER JOIN Document ON Association.docID = Document.DocumentID;
+-- WHERE Word.word = 'die'
+-- GROUP BY Word.word, Document.URL;
 
 -- SELECT * FROM Word WHERE word = 'work';

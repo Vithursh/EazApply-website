@@ -20,15 +20,25 @@ void FilterSystem::loadDatabaseData() {
     // Add all the words & URL from the database into the vector
     sqlite3_stmt *stmt{};
     sqlite3* DB{};
+
+    /*
+    const char* statement = "SELECT Word.word, Document.URL FROM Association "
+                        "INNER JOIN Word ON Association.termID = Word.WordID "
+                        "INNER JOIN Document ON Association.docID = Document.DocumentID "
+                        "LIMIT ? OFFSET ?;";
+    */
+
     const char* statement = "SELECT Word.word, Document.URL FROM Association "
                       "INNER JOIN Word ON Association.termID = Word.WordID "
                       "INNER JOIN Document ON Association.docID = Document.DocumentID;";
-    int rc = sqlite3_prepare_v2(DB, statement, -1, &stmt, nullptr);
 
     // Open the database
     if (sqlite3_open("/home/vithursh/Coding/EazApply/backend/File Data/website_data.db", &DB) != SQLITE_OK) {
         std::cerr << "Error opening database: " << sqlite3_errmsg(DB) << std::endl;
     }
+
+    cout << "Test to see where the code frezzes #1" << endl;
+    int rc = sqlite3_prepare_v2(DB, statement, -1, &stmt, nullptr);
 
     // Prepare the SQL statement
     if (sqlite3_prepare_v2(DB, statement, -1, &stmt, nullptr) != SQLITE_OK) {
@@ -37,61 +47,117 @@ void FilterSystem::loadDatabaseData() {
         throw "Code was stopped!!!";
     }
 
-    // Loop through the results, a row at a time.
-    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-        FilterSystem tempInstance{};
-        auto word = sqlite3_column_text(stmt, 0);
-        std::string wordStr = reinterpret_cast<const char*>(word);
-        tempInstance.setName(wordStr);
-        auto url = sqlite3_column_text(stmt, 1);
-        std::string urlStr = reinterpret_cast<const char*>(url);
-        tempInstance.setWebsiteURL(urlStr);
+    // Set the number of documents
+    setNumOfDocuments();
 
-        // Calculates the term frequency
-        if (!m_dataBaseData.empty()) {
-            bool found = false;
-            // Find and update existing instance
-            for (auto& entry : m_dataBaseData) {
-                if (entry.getName() == tempInstance.getName() && entry.getWebsiteURL() == tempInstance.getWebsiteURL()) {
-                    entry.setTermFrequency(entry.getTermFrequency() + 1);
-                    found = true;
-                    break;
+    // int batchSize = 10000;
+    // int offset = 0;
+    
+    int count = 0;
+    // bool isStopped = false;
+    
+    // while (isStopped == false) {
+    //     cout << "Test to see where the code frezzes #2" << endl;
+    //     sqlite3_prepare_v2(DB, statement, -1, &stmt, nullptr);
+    //     sqlite3_bind_int(stmt, 1, batchSize);
+    //     sqlite3_bind_int(stmt, 2, offset);
+
+        // int rowsFetched = 0;
+        // Loop through the results, a row at a time.
+        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+            cout << "This code was run: " << ++count << " number of times." << endl;
+            // cout << "The number of documents is: " << getNumOfDocuments() << endl;
+            // rowsFetched++;
+            FilterSystem tempInstance{};
+            auto word = sqlite3_column_text(stmt, 0);
+            std::string wordStr = reinterpret_cast<const char*>(word);
+            tempInstance.setName(wordStr);
+            auto url = sqlite3_column_text(stmt, 1);
+            std::string urlStr = reinterpret_cast<const char*>(url);
+            tempInstance.setWebsiteURL(urlStr);
+
+            // CREATE A NEW SETTERS AND GETTERS FOR CALCULATING THE NUMBER OF DUPLICATE WORDS IN A DOCUMENT THEN GET THE TF 
+            // Calculates the term frequency
+            if (!m_dataBaseData.empty()) {
+                bool found = false;
+                // Find and update existing instance(term frequency)
+                for (auto& entry : m_dataBaseData) {
+                    // Update the term frequency for words that occur mutiple times in a document
+                    if (entry.getName() == tempInstance.getName() && entry.getWebsiteURL() == tempInstance.getWebsiteURL()) {
+                        // cout << "The TF before adding more onto it: " << entry.getTermFrequency() << endl;
+                        entry.setDuplicateWordCount(entry.getDuplicateWordCount() + 1);
+                        found = true;
+                        // cout << "Updating TF for existing word: " << entry.getTermFrequency() << endl;
+                        break;
+                    }
                 }
-            }
 
-            // If word not found, add new instance
-            if (!found) {
-                tempInstance.setTermFrequency(1);
+                // If word not found, add new instance
+                if (!found) {
+                    tempInstance.setDuplicateWordCount(1);
+                    m_dataBaseData.push_back(tempInstance);
+                    // cout << "Adding new word with TF=1" << endl;
+                }
+
+            } else {
+                // First entry
+                tempInstance.setDuplicateWordCount(1);
                 m_dataBaseData.push_back(tempInstance);
+                // cout << "First entry with TF=1" << endl;
             }
 
-        } else {
-            // First entry
-            tempInstance.setTermFrequency(1);
-            m_dataBaseData.push_back(tempInstance);
+            // cout << "TF for '" << tempInstance.getName() 
+            // << "' in '" << tempInstance.getWebsiteURL() 
+            // << "' is: " << tempInstance.getTermFrequency() << endl;
+
+            // cout << "The word count for '" << tempInstance.getName() << "' is: " << tempInstance.getDuplicateWordCount() << endl;
         }
-    }
+
+        // cout << "Processing batch: Offset = " << offset << ", Batch size = " << batchSize << endl;
+        // sqlite3_finalize(stmt);
+        // if (rowsFetched < batchSize) {
+        //     offset += batchSize;
+        //     isStopped = true;
+        //     // break;
+        // }
+    // }
 
     int numOfDocumentsContainingWord{};
     std::string lastDocument{};
 
     // Count the number of different documents
     for (int i = 0; i < m_dataBaseData.size(); i++) {
-        if (m_dataBaseData[i].getWebsiteURL() != m_dataBaseData[i+1].getWebsiteURL()) {
-            // cout << "The different documents is: " << m_dataBaseData[i].getWebsiteURL() << endl;
-            numOfDocuments++;
-            i++;
-        }
-        
+        // Ex. Website1, Website2, Website1, Website3, Website2
+        // numOfDocuments = 2
+        // if (m_dataBaseData[i].getWebsiteURL() != m_dataBaseData[i+1].getWebsiteURL()) {
+        //     // cout << "The different documents is: " << m_dataBaseData[i].getWebsiteURL() << endl;
+        //     numOfDocuments++;
+        //     i++;
+        // }
+
+        // Get the term frequency using the 'DuplicateWordCount' getters and setters
+        // for (size_t j = 0; j <= i && j < m_dataBaseData.size(); j++) {  // Changed to <= to include current word
+            // if (m_dataBaseData[i].getName() == m_dataBaseData[j].getName() && m_dataBaseData[i].getWebsiteURL() == m_dataBaseData[j].getWebsiteURL()) {
+                // cout << "The TF before adding more onto it: " << entry.getTermFrequency() << endl;
+                m_dataBaseData[i].setTermFrequency(m_dataBaseData[i].getDuplicateWordCount());
+                cout << "TF for '" << m_dataBaseData[i].getName() 
+                << "' in '" << m_dataBaseData[i].getWebsiteURL() 
+                << "' is: " << m_dataBaseData[i].getTermFrequency() << endl;
+                // found = true;
+                // cout << "Updating TF for existing word: " << entry.getTermFrequency() << endl;
+                // break;
+            // }
+        // }
+
         // Count the number of documents containing the word
+        // lastDocument = "";
         for (size_t j = 0; j < i && j < m_dataBaseData.size(); j++) {
-            lastDocument = "";
             if (m_dataBaseData[j].getName() == m_dataBaseData[i].getName() && lastDocument != m_dataBaseData[j].getWebsiteURL()) {
                 lastDocument = m_dataBaseData[j].getWebsiteURL();
                 m_dataBaseData[i].setDocumentCountContainingWord(m_dataBaseData[i].getDocumentCountContainingWord() + 1);
                 cout << "Word '" << m_dataBaseData[i].getName() << "' found in document: " << m_dataBaseData[i].getWebsiteURL() << " (count: " << m_dataBaseData[i].getDocumentCountContainingWord() << ")" << endl;
             } else {
-                // If the word is not found in any document (default value is 0)
+                // If the word is not found in any document (default value is 1)
                 if (m_dataBaseData[i].getDocumentCountContainingWord() == 0) {
                     m_dataBaseData[i].setDocumentCountContainingWord(m_dataBaseData[i].getDocumentCountContainingWord() + 1);
                 }
@@ -99,7 +165,7 @@ void FilterSystem::loadDatabaseData() {
         }
     }
 
-    // Find the maximum number of documents containing the word
+    // All instances of the same word get the document count
     for (size_t i = 0; i < m_dataBaseData.size(); i++) {
         for (size_t j = 0; j < i && j < m_dataBaseData.size(); j++) {
             if (m_dataBaseData[j].getName() == m_dataBaseData[i].getName()) {
@@ -127,21 +193,21 @@ void FilterSystem::loadDatabaseData() {
         cout << "The document count for '" << entry.getName() << "' is: " << docCount << endl;
 
         // Calculate the inverse document frequency
-        double idf = 1 + log(numOfDocuments / docCount);
+        double idf = 1 + log(getNumOfDocuments() / docCount);
         entry.setInverseDocumentFrequency(idf);
         
         // Calculate the TF * IDF
         entry.setTFMultiplyIDF(entry.getTermFrequency() * idf);
     }
-    
+
     cout << endl << "The data inside the 'm_dataBaseData' vector is:" << endl;
     for (auto& data : m_dataBaseData) {
-        if (data.getName() == "work") {
+        // if (data.getName() == "work") {
             std::cout << "Word: " << data.getName() << ", URL: " << data.getWebsiteURL() << ", Term Frequency: " << data.getTermFrequency() << ", Inverse Document Frequency: " << data.getInverseDocumentFrequency() << ", TF * IDF: " << data.getTFMultiplyIDF() << std::endl;
             cout << "There are '" << m_dataBaseData.size() << " many words in the 'm_dataBaseData' vector." << endl;
             cout << "The max size a vector can hold is: " << m_dataBaseData.max_size() << endl;
-            break;
-        }
+            // break;
+        // }
     }
 
     // Free the statement when done.
@@ -199,7 +265,6 @@ void FilterSystem::setTermFrequency(double termFrequency) {
     // Loop through the results, a row at a time.
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         numOfWordInDocument = sqlite3_column_int(stmt, 0);
-        // std::cout << "Number of occurrences: " << numOfWordInDocument << std::endl;
     }
 
     // Free the statement when done.
@@ -213,7 +278,8 @@ void FilterSystem::setTermFrequency(double termFrequency) {
     //     }
     // }
 
-    // cout << "The number of words in the document " << m_url << " is: " << numOfWordInDocument << endl;
+    cout << "The TF before calculating is: " << termFrequency << endl;
+    cout << "The number of words in the document " << m_url << " is: " << numOfWordInDocument << endl;
     m_termFrequency = termFrequency / numOfWordInDocument;
 }
 
@@ -241,6 +307,10 @@ void FilterSystem::setTFMultiplyIDF(double TFMultiplyIDF) {
     m_TFMultiplyIDF = TFMultiplyIDF;
 }
 
+double FilterSystem::getTFMultiplyIDF() {
+    return m_TFMultiplyIDF;
+}
+
 void FilterSystem::setDocumentCountContainingWord(int numOfDocumentsContainingWord) {
     m_documentCountContainingWord = numOfDocumentsContainingWord;
 }
@@ -249,8 +319,45 @@ int FilterSystem::getDocumentCountContainingWord() {
     return m_documentCountContainingWord;
 }
 
-double FilterSystem::getTFMultiplyIDF() {
-    return m_TFMultiplyIDF;
+int FilterSystem::getNumOfDocuments() {
+    return numOfDocuments;
+}
+
+void FilterSystem::setNumOfDocuments() {
+    sqlite3_stmt *stmt{};
+    sqlite3* DB{};
+    const char* statement = "SELECT COUNT(URL) FROM Document;";
+    int rc = sqlite3_prepare_v2(DB, statement, -1, &stmt, nullptr);
+
+    // Open the database
+    if (sqlite3_open("/home/vithursh/Coding/EazApply/backend/File Data/website_data.db", &DB) != SQLITE_OK) {
+        std::cerr << "Error opening database: " << sqlite3_errmsg(DB) << std::endl;
+    }
+
+    // Prepare the SQL statement
+    if (sqlite3_prepare_v2(DB, statement, -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cerr << "Error preparing SQL statement: " << sqlite3_errmsg(DB) << std::endl;
+        sqlite3_close(DB);
+        throw "Code was stopped!!!";
+    }
+
+    // Loop through the results, a row at a time.
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        numOfDocuments = sqlite3_column_int(stmt, 0);
+    }
+
+    // Free the statement when done.
+    sqlite3_reset(stmt);
+    sqlite3_finalize(stmt);
+    sqlite3_close(DB);
+}
+
+int FilterSystem::getDuplicateWordCount() {
+    return m_duplicateWordCount;
+}
+
+void FilterSystem::setDuplicateWordCount(int duplicateWordCount) {
+    m_duplicateWordCount = duplicateWordCount;
 }
 
 bool FilterSystem::extractWordsFromString(const char* str) {
@@ -305,7 +412,7 @@ void FilterSystem::computeSurveyQuestionsTFIDF() {
     // Count the number of documents containing the word
     for (int i = 0; i < m_surveyQuestionAnwsers.size(); i++) {
         for (size_t j = 0; j < i && j < m_dataBaseData.size(); j++) {
-            lastDocument = "";
+            // lastDocument = "";
             if (m_dataBaseData[j].getName() == m_surveyQuestionAnwsers[i].getName() && lastDocument != m_dataBaseData[j].getWebsiteURL()) {
                 lastDocument = m_dataBaseData[j].getWebsiteURL();
                 m_surveyQuestionAnwsers[i].setDocumentCountContainingWord(m_surveyQuestionAnwsers[i].getDocumentCountContainingWord() + 1);
@@ -331,7 +438,7 @@ void FilterSystem::computeSurveyQuestionsTFIDF() {
         cout << "The document count for '" << entry.getName() << "' is: " << docCount << endl;
 
         // Calculate the inverse document frequency
-        double idf = 1 + log(numOfDocuments / docCount);
+        double idf = 1 + log(getNumOfDocuments() / docCount);
         entry.setInverseDocumentFrequency(idf);
         
         // Calculate the TF * IDF

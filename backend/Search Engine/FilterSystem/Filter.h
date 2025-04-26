@@ -23,6 +23,7 @@ class FilterSystem {
     double m_inverseDocumentFrequency{};
     double m_TFMultiplyIDF{};
     int m_documentCountContainingWord{};
+    int m_duplicateWordCount{};
     std::vector<std::string> unwantedChars = {
     " ", "\t", "\n",  // Whitespace characters
     "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "-", "_", "+", "=", "{", "}", "[", "]", "|", "\\", ":", ";", "\"", "'", "<", ">", ",", ".", "?", "/",
@@ -41,6 +42,8 @@ class FilterSystem {
     double getInverseDocumentFrequency();
     int getDocumentCountContainingWord();
     double getTFMultiplyIDF();
+    int getNumOfDocuments();
+    int getDuplicateWordCount();
 
     // Setters
     void setName(std::string name);
@@ -50,6 +53,8 @@ class FilterSystem {
     void setInverseDocumentFrequency(double inverseDocumentFrequency);
     void setDocumentCountContainingWord(int numOfDocumentsContainingWord);
     void setTFMultiplyIDF(double TFMultiplyIDF);
+    void setNumOfDocuments();
+    void setDuplicateWordCount(int duplicateWordCount);
 
     // Vectors
     std::vector<FilterSystem> m_dataBaseData{};

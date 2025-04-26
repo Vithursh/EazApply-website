@@ -13,6 +13,10 @@ from nltk.corpus import words as nltk_words
 from spellchecker import SpellChecker
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 import unicodedata
 import time
 import os
@@ -21,6 +25,7 @@ import logging
 import re
 import csv
 import ctypes
+import json
 import requests
 
 from scrapy.crawler import Crawler
@@ -46,6 +51,13 @@ class EazApplySpider(scrapy.Spider):
 
     # Load the spaCy model
     nlp = spacy.load("en_core_web_sm")
+
+    # Set up Chrome options for headless mode
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')  # Run Chrome in headless mode
+    chrome_options.add_argument('--disable-gpu')  # Disable GPU acceleration (optional)
+    chrome_options.add_argument('--no-sandbox')  # Bypass OS security model (useful for Linux)
+    chrome_options.add_argument('--disable-dev-shm-usage')  # Overcome limited resource problems
 
     # Words to match to
     job_terms = {
@@ -325,6 +337,47 @@ class EazApplySpider(scrapy.Spider):
         return count
 
 
+    def clean_and_chunk(self, text: str) -> list[str]:
+        api_key = os.getenv("GEMINI_API_KEY")
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            "gemini-1.5-flash:generateContent"
+            f"?key={api_key}"
+        )
+
+        instruction = (
+            "You are a web‐page summarization assistant for job listings.\n"
+            "1) Remove all navigation menus, advertisements, footers, scripts, and any HTML artifacts.\n"
+            "2) Merge broken lines into full, grammatically correct sentences.\n"
+            "3) Summarize the entire page’s content into a single cohesive paragraph "
+            "that covers the key details: job title, company name, location, main responsibilities, "
+            "qualifications, application deadline/contact info, and any other critical info.\n"
+            "4) Return **only** that one paragraph in plain English. No JSON, no lists, no additional commentary—just the summary."
+        )
+
+        payload = {
+            "contents": [
+                {"parts": [{"text": instruction}, {"text": text}]}
+            ],
+            "generationConfig": {
+                "maxOutputTokens": 2048,
+                "temperature": 0.0
+            }
+        }
+
+        headers = {"Content-Type": "application/json"}
+        resp = requests.post(url, headers=headers, json=payload)
+        resp.raise_for_status()
+
+        # Extract the raw text response
+        body = resp.json()
+        raw = body["candidates"][0]["content"]["parts"][0]["text"]
+        
+        # Split on double newlines into paragraphs
+        paragraphs = [p.strip() for p in raw.split("\n\n") if p.strip()]
+        return paragraphs
+
+
     def remove_short_words(self, input_str):
         input_words = input_str.split()
         final_word = []
@@ -394,16 +447,23 @@ class EazApplySpider(scrapy.Spider):
         # Creating an object
         # logger = logging.getLogger()
         try:
-            # logger.info("This is a test log message.")
-            # Fetch the HTML content
-            response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
-            response.raise_for_status()  # Raise an error for HTTP issues
+            # Set up the Selenium WebDriver
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.chrome_options)
 
-            # Parse the HTML
-            soup = BeautifulSoup(response.content, 'html.parser')
+            # Navigate to the target webpage
+            driver.get(url)
 
-            # Extract text
-            content = soup.get_text(strip=True)
+            # Wait for the dynamic content to load
+            time.sleep(5)  # Adjust the sleep time as needed
+
+            # Retrieve the rendered page source
+            html_content = driver.page_source
+
+            # Parse the page source with BeautifulSoup
+            soup = BeautifulSoup(html_content, 'html.parser')
+
+            # Extract all text from the page
+            content = soup.get_text()
 
             # Log the visited URL and extracted content
             # logger.info(f"Visited: {url}")
@@ -431,6 +491,14 @@ class EazApplySpider(scrapy.Spider):
 
             # Extract all text
             text = self.scrape_page(URL)
+
+            print("The chunk before cleaning is:", text)
+            time.sleep(20)
+
+            clean_text = self.clean_and_chunk(text)
+
+            print("The chunk after cleaning is:", clean_text)
+            time.sleep(200)
 
             # get score
             # total_score[0] = self.checkUseful(text)         
@@ -471,7 +539,7 @@ class EazApplySpider(scrapy.Spider):
                 URL_bytes = URL.encode('utf-8')
 
                 # Call the function
-                result = shared_library.indexDocument(URL_bytes)
+                # result = shared_library.indexDocument(URL_bytes)
                 os.remove(URLFilePathName)
 
             # Delete an web page
