@@ -17,6 +17,10 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from json import JSONDecodeError
 import unicodedata
 import time
 import os
@@ -32,7 +36,7 @@ from scrapy.crawler import Crawler
 
 class EazApplySpider(scrapy.Spider):
     name = 'EazApplybot'
-    start_urls = ['http://books.toscrape.com/']
+    start_urls = ['https://fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/?src=SNS-102']
     sub_urls = deque(start_urls)
     crawled_urls = set()
 
@@ -58,60 +62,6 @@ class EazApplySpider(scrapy.Spider):
     chrome_options.add_argument('--disable-gpu')  # Disable GPU acceleration (optional)
     chrome_options.add_argument('--no-sandbox')  # Bypass OS security model (useful for Linux)
     chrome_options.add_argument('--disable-dev-shm-usage')  # Overcome limited resource problems
-
-    # Words to match to
-    job_terms = {
-            "Annual leave": 0,
-            "Applicant tracking system (ATS)": 0,
-            "Apprenticeship": 0,
-            "Background check": 0,
-            "Benefit-in-kind": 0,
-            "Benefits": 0,
-            "Branding statement": 0,
-            "Breaks": 0,
-            "Code of practice": 0,
-            "Collective agreements": 0,
-            "Compensation package": 0,
-            "Constructive dismissal": 0,
-            "Continuity of employment": 0,
-            "Contract of employment": 0,
-            "Contract employee": 0,
-            "Cover letter": 0,
-            "Deductions": 0,
-            "Disciplinary procedure": 0,
-            "Dismissal": 0,
-            "Employee": 0,
-            "Employment contract": 0,
-            "Employment gap": 0,
-            "Employment permit": 0,
-            "Experience": 0,
-            "Fixed-term contract": 0,
-            "Follow-up": 0,
-            "Freelancer": 0,
-            "Hiring manager": 0,
-            "Informational interview": 0,
-            "Internship": 0,
-            "Job sharing": 0,
-            "Leave": 0,
-            "Maternity leave": 0,
-            "Minimum wage": 0,
-            "Notice": 0,
-            "Offer letter": 0,
-            "Onboarding": 0,
-            "Open-ended contract": 0,
-            "Outsourcing": 0,
-            "Overtime": 0,
-            "Pension": 0,
-            "References": 0,
-            "Soft skills": 0,
-            "STAR method": 0,
-            "Temp": 0,
-            "Temp-to-hire": 0,
-            "Trade union": 0,
-            "Transferable skills": 0,
-            "White-collar": 0,
-            "Zero-hours contract": 0
-    }
 
 
     # Initialize the bucket with capacity, refill time, and refill amount
@@ -160,7 +110,7 @@ class EazApplySpider(scrapy.Spider):
         # print("The URL is:", page,"\n and the url is:", filename)
         
         # Crawler loop
-        yield from self.crawl_loop(response)
+        yield from self.crawl_loop(response, new_start_urls)
 
 
     # refillBucket function
@@ -199,9 +149,9 @@ class EazApplySpider(scrapy.Spider):
 
 
     # Loops through all links until all webpages have been visited
-    def crawl_loop(self, response):
+    def crawl_loop(self, response, link):
         # Get all hyperlinks
-        self.get_hyperlinks(response)
+        self.get_hyperlinks(response, link)
 
         # Uses the BFS algorithm to vist each link in the books.toscrape website
         if self.sub_urls:
@@ -223,24 +173,34 @@ class EazApplySpider(scrapy.Spider):
             self.logger.info('All URLs have been processed.')
             
             df = pd.DataFrame({"Title": self.csv_urls})
-            print(df)
+            # print(df)
             df.to_csv('/home/vithursh/Coding/EazApply/backend/File Data/LinkInBooksToScrapeWebsite.csv', index=False)
 
 
     # Gets all sub URLS in a webpage
-    def get_hyperlinks(self, response):
+    def get_hyperlinks(self, response, link):
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.chrome_options)
+        driver.get(link)
+        
+        print("The link is:", link)
+        time.sleep(20)
+
         # Anchor Tags
-        anchor_tags = response.css('a::attr(href)').getall()
+        anchor_tags = driver.find_elements(By.CSS_SELECTOR, 'a[href]')
+
+        if not anchor_tags:
+            print("No anchor tags found.")
+        # else:
+            # for anchor_tag in anchor_tags:
+                # print(anchor_tag.get_attribute('href'))
+        
+        # time.sleep(60)
 
         # Adds the sub links to the sub_urls array
         for anchor_tag in anchor_tags:
-            # total_score[3] += self.checkUseful(anchor_tag[0])  # Pass the text of the anchor tag to checkUseful
-            official_Link = response.urljoin(anchor_tag)
-            # if official_Link not in self.crawled_urls:
+            official_Link = anchor_tag.get_attribute('href')
             if official_Link not in self.crawled_urls and official_Link not in self.sub_urls:
                 self.sub_urls.append(official_Link)
-                # print("The link:", official_Link,"is added")
-                # print(f"Added URL: {official_Link}")  # Debugging statement
 
             # Removes repetitive sub-links and blacklist certain websites
             if ".com/index.html" in official_Link or "facebook.com" in official_Link or "linkedin.com" in official_Link or "forum.bell.ca" in official_Link or "youtube.com" in official_Link or "x.com" in official_Link:
@@ -299,42 +259,73 @@ class EazApplySpider(scrapy.Spider):
         yield from self.analyzer(response, url, filename, website_name)
 
 
-    # Checks how usefull each tag is by giving it a score based on how much matched words it contains from the list
-    def checkUseful(self, tag):
-        count = 0
-        
-        # print("\nThe text should be here:")
+    # Checks how weather to index its text by giving it to gemini to check to see if it's a job application or not
+    def is_job_application_page(self, url: str) -> bool:
+        # api_key = os.getenv("GEMINI_API_KEY")
+        # instruction = (
+        #     "You are a page classifier for job sites.  Decide if the given page text "
+        #     "contains a **detailed job posting** (one individual job) with sections like:\n"
+        #     "  • Job title AND at least one of: “Responsibilities”, “Qualifications”, “Job Description”, or “How to Apply”\n"
+        #     "  • A paragraph (not just a list) describing the role’s duties\n"
+        #     "  • Application instructions or an application form\n"
+        #     "If you see only a list of positions or links (e.g. a homepage or careers listing), "
+        #     "that is **not** a detailed job posting.\n\n"
+        #     "If it **is** a detailed job posting page, respond with exactly:\n"
+        #     "  Yes\n"
+        #     "Otherwise respond with exactly:\n"
+        #     "  No\n"
+        #     "Do not output anything else—no punctuation, no extra words, no JSON."
+        # )
 
-        # print("The tag is:",tag)
-        
-        if tag:  # Check if title exists
-            # Checks if it is a BeautifulSoup object
-            if isinstance(tag, Tag):
-                tag_text = tag.get_text().strip()
-            else:
-                tag_text = tag.strip()  # Get the text from the tag
-                
-            tag_words = set(tag_text.split())  # Tokenize the tag text into words
-            for useful_words in self.job_terms:
-                job_terms_list = set(useful_words.split())
-                common_words = tag_words & job_terms_list
-                if common_words:
-                    print(common_words)
-                for words in common_words:
-                    self.job_terms[useful_words] += 1
-            
-            # Adds up all of the scores for the words
-            for total_word_score in self.job_terms:
-                count += self.job_terms[total_word_score]
-                self.job_terms[total_word_score] = 0
+        # payload = {
+        #     "contents": [
+        #         {"parts": [{"text": instruction}, {"text": text}]}
+        #     ],
+        #     "generationConfig": {
+        #         "maxOutputTokens": 5,
+        #         "temperature": 0.0
+        #     }
+        # }
 
-            # print(self.job_terms[useful_words])
-            # print("The total score is",count)
-        else:
-            # print("No tag found.")
-            count = 0
-        
-        return count
+        # resp = requests.post(
+        #     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + api_key,
+        #     json=payload,
+        #     headers={"Content-Type": "application/json"}
+        # )
+        # resp.raise_for_status()
+        # raw = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        # print("The LLM says:", raw)
+        # time.sleep(20)
+
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.chrome_options)
+        driver.get(url)
+
+         # wait up to 10s for any JSON-LD scripts to appear
+        try:
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'script[type="application/ld+json"]'))
+            )
+        except:
+            # no JSON-LD appeared in time; still proceed to parse whatever is here
+            pass
+
+        html_content = driver.page_source
+        driver.quit()
+
+        soup = BeautifulSoup(html_content, 'html.parser')
+        for tag in soup.select('script[type="application/ld+json"]'):
+            raw = tag.string or tag.text
+            try:
+                data = json.loads(raw)
+                print("The JSON data is:", data)
+                time.sleep(20)
+            except JSONDecodeError:
+                continue
+            entries = data if isinstance(data, list) else [data]
+            for entry in entries:
+                if entry.get("@type") == "JobPosting":
+                    return True
+        return False
 
 
     def clean_and_chunk(self, text: str) -> list[str]:
@@ -443,100 +434,104 @@ class EazApplySpider(scrapy.Spider):
             writer.writerow([URL, text])
 
 
-    def scrape_page(self, url):
-        # Creating an object
-        # logger = logging.getLogger()
-        try:
-            # Set up the Selenium WebDriver
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.chrome_options)
+    def scrape_page(self, url: str, headless: bool = True, timeout: int = 30, poll_interval: float = 0.5) -> str:
+        print(f"Attempting to scrape before URL: {url}")  # Add this line
+        time.sleep(20)
 
-            # Navigate to the target webpage
-            driver.get(url)
+        """
+        Loads a URL in Selenium, waits until the rendered text stabilizes, then returns all text.
+        This works whether the page content comes from initial HTML, XHR, infinite scroll, or Shadow DOM.
+        """
 
-            # Wait for the dynamic content to load
-            time.sleep(5)  # Adjust the sleep time as needed
+        opts = Options()
+        if headless:
+            opts.add_argument("--headless")
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opts)
+        if not isinstance(url, str):
+            url = str(url)  # coerce to string (but better to pass the correct type upstream)
+        print(f"Attempting to scrape URL: {url}")  # Add this line
+        time.sleep(20)
+        driver.get(url)
 
-            # Retrieve the rendered page source
-            html_content = driver.page_source
+        # 1) Give the page a little time to start loading
+        time.sleep(1)
 
-            # Parse the page source with BeautifulSoup
-            soup = BeautifulSoup(html_content, 'html.parser')
+        # 2) Poll page_source length until it stops increasing (or we hit timeout)
+        start = time.time()
+        last_len = 0
+        while True:
+            html = driver.page_source
+            curr_len = len(html)
+            if curr_len == last_len:
+                # page_source has stabilized
+                break
+            last_len = curr_len
+            if time.time() - start > timeout:
+                # timed out waiting for stabilization
+                break
+            time.sleep(poll_interval)
 
-            # Extract all text from the page
-            content = soup.get_text()
+        # 3) Try to extract shadow-root content generically
+        #    (many dynamic frameworks inject into shadow DOM)
+        #    We execute JS to grab all textContent from document and any shadow roots
+        js = """
+        function getAllText(el) {
+        if (el.shadowRoot) {
+            return getAllText(el.shadowRoot);
+        }
+        let txt = el.textContent || "";
+        for (let c of el.children) {
+            txt += "\\n" + getAllText(c);
+        }
+        return txt;
+        }
+        return getAllText(document);
+        """
+        full_text = driver.execute_script(js)
 
-            # Log the visited URL and extracted content
-            # logger.info(f"Visited: {url}")
-            # logger.info(f"Content: {content}")  # Log first 200 characters
-
-            return content
-        except requests.exceptions.RequestException as e:
-            # Log errors
-            # logger.error(f"Failed to scrape {url}: {e}")
-            return None
+        driver.quit()
+        return full_text
 
 
     # Extracts HTML tags from each webpage
     def analyzer(self, response, URL, URLFilePathName, website_name):
         print("The analyzer function has been called!!!")
         with open(URLFilePathName, 'r') as f:
-            contents = f.read()
-            total_score = [0] * 7
-
-            # Fetch the HTML content
-            # page = requests.get(URL)
-
-            # # Parse the HTML
-            # soup = BeautifulSoup(page.content, 'html.parser')
-
+            print("The URL is:", URL)
+            time.sleep(20)
             # Extract all text
             text = self.scrape_page(URL)
 
-            print("The chunk before cleaning is:", text)
-            time.sleep(20)
+            # If it is a job application webpage 
+            if self.is_job_application_page(URL):
+                print("The chunk before cleaning is:", text)
+                time.sleep(20)
 
-            clean_text = self.clean_and_chunk(text)
+                clean_text = self.clean_and_chunk(text)
 
-            print("The chunk after cleaning is:", clean_text)
-            time.sleep(200)
-
-            # get score
-            # total_score[0] = self.checkUseful(text)         
-
-            # count = 0
-            # for i in total_score:
-            #     count += i
-            # print("The total score for this webpage is:", count)
-
-            # If the score is greater than or equal to 10
-            if True:
-                stemmed_word = self.get_lemmatize(text)
-                # Remove new lines and replace with commas
-                cleaned_text = re.sub(r"[()*&#@^%|!.,;:?<>{}/\[\]\\'\"-]", '', stemmed_word)
-                cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
-                cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
-                trimmed_text = re.sub(r',\s+', ',', cleaned_text)
-                trimmed_text = unicodedata.normalize('NFD', trimmed_text).encode('ascii', 'ignore').decode('utf-8')
+                print("The URL is: ", URL)
+                print("The chunk after cleaning is:", clean_text)
+                time.sleep(100)
 
                 # Define the path to the shared library
-                lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
+                # lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
 
                 # Load the shared library
-                shared_library = ctypes.CDLL(lib_path)
+                # shared_library = ctypes.CDLL(lib_path)
 
                 # Define the argument and return types
-                shared_library.indexDocument.argtypes = [ctypes.c_char_p]
-                shared_library.indexDocument.restype = ctypes.c_void_p
+                # shared_library.indexDocument.argtypes = [ctypes.c_char_p]
+                # shared_library.indexDocument.restype = ctypes.c_void_p
 
                 # Using 'with' to open and write to the file
-                with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
-                    file.write(trimmed_text)
+                # with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
+                    # file.write(str(clean_text))
 
                 # Log text
-                self.website_text_logs(URL, trimmed_text)
+                # self.website_text_logs(URL, clean_text)
 
                 # Convert the string to bytes
-                URL_bytes = URL.encode('utf-8')
+                # URL_bytes = URL.encode('utf-8')
 
                 # Call the function
                 # result = shared_library.indexDocument(URL_bytes)
@@ -544,11 +539,16 @@ class EazApplySpider(scrapy.Spider):
 
             # Delete an web page
             else:
+                print("No, it is not a job application webpage!!!")
+                print("The URL is: ", URL)
+                time.sleep(20)
                 # Delete the HTML page
                 # print("The file path that will be deleted is:", URLFilePathName)
+                df = pd.DataFrame({"Title": [URL]})
+                df.to_csv('/home/vithursh/Coding/EazApply/backend/File Data/NotJobApplicationWebpages.csv', mode='a', header=False, index=False)
                 os.remove(URLFilePathName)
 
-        yield from self.crawl_loop(response)
+        yield from self.crawl_loop(response, URL)
         print("The crawl_loop function has been called!!!")
 
 
