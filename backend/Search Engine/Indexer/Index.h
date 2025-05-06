@@ -18,7 +18,7 @@ public:
 
     void executeSQLFile(sqlite3* DB, int rc);
     
-    void insertData(sqlite3* DB, int rc, int WordID, string word, int DocumentID, string URL, int termID, int docID, int position);
+    void insertData(sqlite3* DB, int rc, int ParagraphID, string paragraph, int DocumentID, string URL);
 
     int checkWordExists(sqlite3* DB, int rc, string word);
 

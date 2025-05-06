@@ -4,13 +4,6 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 import os
 import shutil
-import wordninja
-import nltk
-import spacy
-from nltk.corpus import words as nltk_words
-from spellchecker import SpellChecker
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
 import re
 import ctypes
 import requests
@@ -92,22 +85,26 @@ if __name__ == '__main__':
 #     return split_compound_word(remove_short_words(' '.join(lemmatized)))
 
 
-# text = ["The The scientist's of of want today think deeply deeply instead of clearly. One must be sane to think clearly, but one can think deeply and be quite insane.", "Work as hard and as much as of you want to on the things you like to do the best Pilgrim (Pilgrim #1) | Books","In the quiet village of Meadowbrook, a young boy named Oliver stumbled upon an ancient map hidden in his grandfather’s attic. The map depicted a forgotten realm, lost to time and memory. With a heart full of adventure, Oliver set out to uncover the secrets of the map. His journey led him through dense forests, across raging rivers, and into mysterious caves, each step bringing him closer to a treasure beyond his wildest dreams fouryearold battle."]
+# text = [
+#     "[Nokia is seeking a Web Developer Co-op/Intern for a 4-month hybrid position (September 2nd – December 19th, 2025) in Ottawa, Ontario, Canada. Responsibilities include designing and implementing web GUI features using React and Redux, working with UX specialists, contributing to an Agile team, and resolving software issues. Qualifications require proficiency in JavaScript, React, HTML5, and CSS3; experience with Redux; and familiarity with React component libraries, npm, REST APIs, and Git is preferred. Applicants should be pursuing a Bachelor's or Master's degree in Computer Science, Computer Engineering, or a related field at an accredited Canadian school. The application deadline is July 10th, 2025. The salary range is $34,480 to $84,480 CAD per year.]",
+#     "[The moonlight wove silver threads through the silent streets, while a lone cat, dignified and mysterious, paced atop a brick wall as if contemplating the secrets of the universe. Somewhere in the distance, a train whistled—a sound both nostalgic and promising, as if inviting the weary traveler to embrace the unknown.]",
+#     "[Clio, a global leader in legal technology, is seeking a Software Developer Co-op for an 8-month term (May 2025-December 2025) in Burnaby, Calgary, or Toronto.  Responsibilities include contributing code to Clio's SaaS product suite (using Ruby on Rails, AngularJS, React Native, etc.), participating in development team activities (scoping, planning, reporting, code reviews), contributing to feature development and bug fixes, and participating in product support.  Qualifications include completion of at least the second year of a Computer Science/Engineering program, strong computer science fundamentals, and excellent communication skills.  The expected base pay is $67,000 CAD.  Apply by May 1, 2025 (REQ-1577).]"
+# ]
 # URL = ["Youtube.com", "Website2.com", "Website3.com"]
 
 # for i in range(0, 3):
-    # print("Using spacy:")
-    # stemmed_spcy_word = get_spacy_lemmatize(text[i])
-    # print("The new string is:", stemmed_spcy_word, '\n')
-    # Remove new lines and replace with commas
-    # cleaned_text = re.sub(r"[()*&@^%|!.,;:?<>{}\[\]'-]", '', stemmed_word)
-    # cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
-    # cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
-    # trimmed_text = re.sub(r',\s+', ',', cleaned_text)
-    # print("The new string is:", trimmed_text, '\n')
+#     # print("Using spacy:")
+#     # stemmed_spcy_word = get_spacy_lemmatize(text[i])
+#     # print("The new string is:", stemmed_spcy_word, '\n')
+#     # Remove new lines and replace with commas
+#     # cleaned_text = re.sub(r"[()*&@^%|!.,;:?<>{}\[\]'-]", '', stemmed_word)
+#     # cleaned_text = re.sub(r'\b(\w+)\b', r'\1,', cleaned_text)
+#     # cleaned_text = re.sub(r'([a-zA-Z0-9])\s+([a-zA-Z0-9])', r'\1,\2', cleaned_text)
+#     # trimmed_text = re.sub(r',\s+', ',', cleaned_text)
+#     # print("The new string is:", trimmed_text, '\n')
 
 #     # Define the path to the shared library
-#     # lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
+#     lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
 
 #     # Load the shared library
 #     shared_library = ctypes.CDLL(lib_path)
@@ -118,12 +115,10 @@ if __name__ == '__main__':
 
 #     # Using 'with' to open and write to the file
 #     with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
-#         file.write(trimmed_text)
+#         file.write(text[i])
 
 #     # Convert the string to bytes
 #     URL_bytes = URL[i].encode('utf-8')
-#     id = 0
-#     id += 1
 
 #     # Call the function
 #     result = shared_library.indexDocument(URL_bytes)

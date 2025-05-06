@@ -36,7 +36,7 @@ from scrapy.crawler import Crawler
 
 class EazApplySpider(scrapy.Spider):
     name = 'EazApplybot'
-    start_urls = ['https://fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/?src=SNS-102']
+    start_urls = ['https://clio.wd3.myworkdayjobs.com/ClioCareerSite']
     sub_urls = deque(start_urls)
     crawled_urls = set()
 
@@ -514,27 +514,27 @@ class EazApplySpider(scrapy.Spider):
                 time.sleep(100)
 
                 # Define the path to the shared library
-                # lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
+                lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/Indexer/libIndex.so')
 
                 # Load the shared library
-                # shared_library = ctypes.CDLL(lib_path)
+                shared_library = ctypes.CDLL(lib_path)
 
                 # Define the argument and return types
-                # shared_library.indexDocument.argtypes = [ctypes.c_char_p]
-                # shared_library.indexDocument.restype = ctypes.c_void_p
+                shared_library.indexDocument.argtypes = [ctypes.c_char_p]
+                shared_library.indexDocument.restype = ctypes.c_void_p
 
                 # Using 'with' to open and write to the file
-                # with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
-                    # file.write(str(clean_text))
+                with open('/home/vithursh/Coding/EazApply/backend/File Data/website_content.txt', 'w') as file:
+                    file.write(str(clean_text))
 
                 # Log text
-                # self.website_text_logs(URL, clean_text)
+                self.website_text_logs(URL, clean_text)
 
                 # Convert the string to bytes
-                # URL_bytes = URL.encode('utf-8')
+                URL_bytes = URL.encode('utf-8')
 
                 # Call the function
-                # result = shared_library.indexDocument(URL_bytes)
+                result = shared_library.indexDocument(URL_bytes)
                 os.remove(URLFilePathName)
 
             # Delete an web page
