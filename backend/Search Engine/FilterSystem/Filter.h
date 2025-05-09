@@ -15,15 +15,8 @@ extern "C" {
 
 class FilterSystem {
     public:
-    std::string m_name{};
+    std::string m_paragraph{};
     std::string m_url{};
-    int numOfDocuments{};
-    double m_termFrequency{};
-    double m_queryTermFrequency{};
-    double m_inverseDocumentFrequency{};
-    double m_TFMultiplyIDF{};
-    int m_documentCountContainingWord{};
-    int m_duplicateWordCount{};
     std::vector<std::string> unwantedChars = {
     " ", "\t", "\n",  // Whitespace characters
     "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "-", "_", "+", "=", "{", "}", "[", "]", "|", "\\", ":", ";", "\"", "'", "<", ">", ",", ".", "?", "/",
@@ -32,29 +25,14 @@ class FilterSystem {
     FilterSystem() {};
     void loadDatabaseData();
     bool extractWordsFromString(const char* str);
-    void computeSurveyQuestionsTFIDF();
 
     // Getters
-    std::string getName();
+    std::string getParagraph();
     std::string getWebsiteURL();
-    double getTermFrequency();
-    double getQueryTermFrequency();
-    double getInverseDocumentFrequency();
-    int getDocumentCountContainingWord();
-    double getTFMultiplyIDF();
-    int getNumOfDocuments();
-    int getDuplicateWordCount();
 
     // Setters
-    void setName(std::string name);
+    void setParagraph(std::string paragraph);
     void setWebsiteURL(std::string url);
-    void setTermFrequency(double termFrequency);
-    void setQueryTermFrequency(double queryTermFrequency);
-    void setInverseDocumentFrequency(double inverseDocumentFrequency);
-    void setDocumentCountContainingWord(int numOfDocumentsContainingWord);
-    void setTFMultiplyIDF(double TFMultiplyIDF);
-    void setNumOfDocuments();
-    void setDuplicateWordCount(int duplicateWordCount);
 
     // Vectors
     std::vector<FilterSystem> m_dataBaseData{};
