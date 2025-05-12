@@ -80,25 +80,26 @@ def register():
     #user = supabase.auth.sign_up(username, password)
 
 
-# The "register" route
 @app.route('/survey/value-in-role', methods=['POST'])
 @cross_origin(origin='http://localhost:5173/survey/value-in-role', supports_credentials=True)
 def valueInRole():
-    MAX_SIZE = 3  # The maximum size of the list
-    option = request.json['option']
-
-    print("The option the user picked is:", option)
-
-    if len(option) > MAX_SIZE:
-        option = option[:MAX_SIZE]
+    data = request.get_json()
+    options = data.get('option', [])
     
-    for i in option:
-        print(i)
+    # Pad the options list with None values if less than 3 options selected
+    while len(options) < 3:
+        options.append(None)
     
-    supabase.table('valueinrole').insert({'option1': option[0], 'option2': option[1], 'option3': option[2]}).execute()
-
-    # user = supabase.table('users').insert({'username': username, 'email' : email, 'password': password}).execute()
-    return jsonify({'message': 'Data successfully sent'}), 200
+    try:
+        supabase.table('valueinrole').insert({
+            'option1': options[0],
+            'option2': options[1],
+            'option3': options[2]
+        }).execute()
+        
+        return jsonify({"message": "Data successfully sent"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/survey/roles-interested-in', methods=['POST'])
