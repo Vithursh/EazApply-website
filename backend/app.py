@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS, cross_origin
+from flask_cors import cross_origin
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import os, re
+import requests
 
 app = Flask(__name__)
 # CORS(app, origins='http://localhost:5173/register', supports_credentials=True)
@@ -221,6 +222,110 @@ def skillsEnjoyWorkingWith():
     return jsonify({'message': 'Data successfully sent'}), 200
 
 
+def get_user_summary(text) -> list[str]:
+    api_key = os.getenv("GEMINI_API_KEY")
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        "gemini-1.5-flash:generateContent"
+        f"?key={api_key}"
+    )
+
+    instruction = (
+        "You are a web‐page summarization assistant, but now summarize a candidate’s preferences.\n"
+        "1) Remove any extraneous labels or bullet syntax.\n"
+        "2) Merge any fragments into full sentences.\n"
+        "3) Summarize all the profile details into a single cohesive paragraph "
+        "that covers these fields: experience level, role type, location, company size, "
+        "salary expectation, values, industries, and key skills.\n"
+        "4) Return **only** that one paragraph in plain English. No JSON, no lists, no extra commentary—just the summary."
+    )
+
+    payload = {
+        "contents": [
+            {"parts": [{"text": instruction}, {"text": text}]}
+        ],
+        "generationConfig": {
+            "maxOutputTokens": 2048,
+            "temperature": 0.0
+        }
+    }
+
+    headers = {"Content-Type": "application/json"}
+    resp = requests.post(url, headers=headers, json=payload)
+    resp.raise_for_status()
+
+    # Extract the raw text response
+    body = resp.json()
+    raw = body["candidates"][0]["content"]["parts"][0]["text"]
+    
+    # Split on double newlines into paragraphs
+    paragraphs = [p.strip() for p in raw.split("\n\n") if p.strip()]
+    return paragraphs
+
+
+def convert_survey_answers_to_paragraph():
+    
+    try:
+        # Get the first row from each table
+        value_in_role = supabase.table('valueinrole').select('*').limit(1).execute()
+        roles_interested = supabase.table('rolesinterestedin').select('*').limit(1).execute()
+        like_to_work = supabase.table('liketowork').select('*').limit(1).execute()
+        minimum_salary = supabase.table('minimumexpectedsalary').select('*').limit(1).execute()
+        level_experience = supabase.table('levelofexperience').select('*').limit(1).execute()
+        company_size = supabase.table('companysize').select('*').limit(1).execute()
+        industries_excited = supabase.table('industriesexcitedin').select('*').limit(1).execute()
+        skills_enjoy = supabase.table('skillsenjoyworkingwith').select('*').limit(1).execute()
+
+        # Filter out None values and integers for all tables
+        value_in_role_data = [value for item in value_in_role.data for value in item.values() if value is not None and not isinstance(value, int)]
+        roles_interested_data = [value for item in roles_interested.data for value in item.values() if value is not None and not isinstance(value, int)]
+        like_to_work_data = [value for item in like_to_work.data for value in item.values() if value is not None and not isinstance(value, int)]
+        minimum_salary_data = [value for item in minimum_salary.data for value in item.values() if value is not None and not isinstance(value, int)]
+        level_experience_data = [value for item in level_experience.data for value in item.values() if value is not None and not isinstance(value, int)]
+        company_size_data = [value for item in company_size.data for value in item.values() if value is not None and not isinstance(value, int)]
+        industries_excited_data = [value for item in industries_excited.data for value in item.values() if value is not None and not isinstance(value, int)]
+        skills_enjoy_data = [value for item in skills_enjoy.data for value in item.values() if value is not None and not isinstance(value, int)]
+
+        # Filter out NULL values for all tables
+        value_in_role_data = [value for value in value_in_role_data if value != "NULL"]
+        roles_interested_data = [value for value in roles_interested_data if value != "NULL"]
+        like_to_work_data = [value for value in like_to_work_data if value != "NULL"]
+        minimum_salary_data = [value for value in minimum_salary_data if value != "NULL"]
+        level_experience_data = [value for value in level_experience_data if value != "NULL"]
+        company_size_data = [value for value in company_size_data if value != "NULL"]
+        industries_excited_data = [value for value in industries_excited_data if value != "NULL"]
+        skills_enjoy_data = [value for value in skills_enjoy_data if value != "NULL"]
+
+        # Print all data
+        # print("Value in role:", value_in_role_data)
+        # print("Roles interested in:", roles_interested_data)
+        # print("Like to work:", like_to_work_data)
+        # print("Minimum salary:", minimum_salary_data)
+        # print("Level of experience:", level_experience_data)
+        # print("Company size:", company_size_data)
+        # print("Industries excited in:", industries_excited_data)
+        # print("Skills enjoy working with:", skills_enjoy_data)
+
+        # Create a comprehensive human-readable summary
+        text = f"""
+                Profile Summary:
+                - Values in role: {', '.join(value_in_role_data)}
+                - Interested in roles: {', '.join(roles_interested_data)}
+                - Preferred locations: {', '.join(like_to_work_data)}
+                - Minimum expected salary: ${', '.join(minimum_salary_data)} per year
+                - Level of experience: {', '.join(level_experience_data)}
+                - Preferred company size: {', '.join(company_size_data)}
+                - Industries interested in: {', '.join(industries_excited_data)}
+                - Skills: {', '.join(skills_enjoy_data)}
+                """
+        
+        return text
+        
+    except Exception as e:
+        print(f"Error in getFirstRow: {str(e)}")
+        return None
+
+
 @app.route('/survey/minimum-expected-salary', methods=['POST'])
 @cross_origin(origin='http://localhost:5173/survey/minimum-expected-salary', supports_credentials=True)
 def minimumExpectedSalary():
@@ -229,15 +334,34 @@ def minimumExpectedSalary():
 
     print("The option the user picked is:", option)
 
+    # Add 'k' to the string value
+    option_with_k = str(option) + 'K'
+
     # if len(option) > MAX_SIZE:
     #     option = option[:MAX_SIZE]
     
     # for i in option:
     #     print(i)
     
-    supabase.table('minimumexpectedsalary').insert({'option1': option}).execute()
+    # Insert the data into the database
+    supabase.table('minimumexpectedsalary').insert({'option1': option_with_k}).execute()
 
-    # user = supabase.table('users').insert({'username': username, 'email' : email, 'password': password}).execute()
+    print("The text is: ", convert_survey_answers_to_paragraph())
+
+    user_summary = get_user_summary(convert_survey_answers_to_paragraph())
+
+    # Extract the first summary without brackets
+    cleaned_summary = user_summary[0] if user_summary else ""  # Get first element of list
+
+    print("The LLM came out with:", cleaned_summary)
+
+    # Replace the insert line with this update operation
+    # .match({'email': request.json.get('email')})\
+    supabase.table('users')\
+        .update({'summary': cleaned_summary})\
+        .match({'email': "Someone123@gmail.com"})\
+        .execute()
+
     return jsonify({'message': 'Data successfully sent'}), 200
 
 
