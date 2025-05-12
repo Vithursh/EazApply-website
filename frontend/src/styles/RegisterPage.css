@@ -1,13 +1,13 @@
 .register-message {
     color: white;
-    padding-right: 160px;
+    /* padding-right: 160px; */
     padding-bottom: 600px;
     font-size: 50px;
 }
 
 .little-header {
-    padding-right: 160px;
-    padding-bottom: 450px;
+    /* padding-right: 160px; */
+    padding-bottom: 500px;
     font-size: 20px;
 }
 

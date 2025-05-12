@@ -1,6 +1,5 @@
 import React from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
 import { Link } from 'react-router-dom';
 import '../styles/PremiumPage.css'
 
@@ -26,7 +25,7 @@ import {
 
 export const BasicPlan = () => {
     return (
-        <div className="bg-dark text-white min-vh-100 d-flex align-items-center min-height">
+        <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center">
             <Card className="w-[350px] h-[350px] custom-card">
                 <CardHeader>
                 <CardTitle className='title'>Basic Plan</CardTitle>

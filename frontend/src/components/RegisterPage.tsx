@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 import '../styles/RegisterPage.css'
 // import LoginPage from './LoginPage';
 // import Navbar from './Navbar';
@@ -14,11 +14,9 @@ import 'react-toastify/dist/ReactToastify.css';
 export const RegisterContext = () => {
     return (
         <>
-        <div className='absolute inset-0 flex items-center justify-center z-0 pointer-events-none'>
-            <h1 className='register-message'>Register with us today</h1>
-        </div>
-        <div className='absolute inset-0 flex items-center justify-center z-0 pointer-events-none'>
-            <h5 className='little-header text-gray-500'>Quickly find and apply to thousands of jobs in one-click.</h5>
+        <div className='fixed top-20 left-0 right-0 flex flex-col items-center justify-center gap-4 pointer-events-none'>
+            <h1 className='text-5xl font-bold text-white'>Register with us today</h1>
+            <h5 className='text-xl text-gray-400'>Quickly find and apply to thousands of jobs in one-click.</h5>
         </div>
         </>
     );
@@ -79,40 +77,66 @@ const RegisterPage: React.FC = () => {
 
     return (
         <>
-        <div className="bg-dark text-dark min-vh-100 d-flex align-items-center">
-            <div className="container">
-                <div className="row justify-content-center">
-                    <div className="col-md-6">
-                        <div className="card">
-                            <div className="card-body">
-                                <form className="dark-blue" onSubmit={handleSubmit}>
-                                    <div className="form-group">
-                                        <label className="register-label">Register</label>
-                                        <br></br>
-                                        <label htmlFor="fname">Name</label>
-                                        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} id="fname" name="fname" className="form-control custom-width"/>
-                                    </div>
-                                    <div className="form-group">
-                                        <label htmlFor="lname">Email</label>
-                                        <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} id="lname" name="lname" className="form-control custom-width"/>
-                                    </div>
-                                    <div className="form-group">
-                                        <label htmlFor="lname">Password</label>
-                                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} id="lname" name="lname" className="form-control custom-width"/>
-                                    </div>
-                                    <br></br>
-                                    <button type='submit' className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded btn-primary">Register</button>
-                                    <br></br>
-                                    <br></br>
-                                    <Link to='/login'>Already have an account?</Link>
-                                </form>
+        <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center">
+            <div className="w-full max-w-md p-6 mt-[200px]"> {/* Added mt-32 for top margin */}
+                <div className="bg-sky-100 rounded-lg shadow-xl p-8">
+                    <form onSubmit={handleSubmit} className="space-y-6 h-[350px]">
+                        <div>
+                            <h2 className="text-2xl font-bold mb-8 text-center">Register</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label htmlFor="fname" className="block text-sm font-medium text-gray-700">Name</label>
+                                    <input
+                                        type="text"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        id="fname"
+                                        name="fname"
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        id="email"
+                                        name="email"
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        id="password"
+                                        name="password"
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-6 space-y-4">
+                                <button
+                                    type="submit"
+                                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                    Register
+                                </button>
+                                <div>
+                                    <Link to="/login" className="text-sm text-blue-600 hover:text-blue-500">
+                                        Already have an account?
+                                    </Link>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
-        <RegisterContext/>
+        <RegisterContext />
         <ToastContainer theme="dark" />
         </>
     );

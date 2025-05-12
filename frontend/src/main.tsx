@@ -1,7 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import 'bootstrap/dist/css/bootstrap.css'
+import './index.css'; // This will include Tailwind's styles
+
 // import dotenv from 'dotenv';
 
 // dotenv.config({ path: '../../.env' });
