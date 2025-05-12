@@ -34,3 +34,5 @@ backend/Search Engine/WebCrawler/WebCrawler/spiders/TestCase.py
 /.vscode/
 backend/Search Engine/Indexer/Index
 sqlite/
+nlohmann/
+curl/

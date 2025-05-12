@@ -17,6 +17,7 @@ class FilterSystem {
     public:
     std::string m_paragraph{};
     std::string m_url{};
+    float m_rank{};
     std::vector<std::string> unwantedChars = {
     " ", "\t", "\n",  // Whitespace characters
     "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "-", "_", "+", "=", "{", "}", "[", "]", "|", "\\", ":", ";", "\"", "'", "<", ">", ",", ".", "?", "/",
@@ -29,14 +30,20 @@ class FilterSystem {
     // Getters
     std::string getParagraph();
     std::string getWebsiteURL();
+    float getRank();
 
     // Setters
     void setParagraph(std::string paragraph);
     void setWebsiteURL(std::string url);
+    void setRank(float rank);
 
     // Vectors
     std::vector<FilterSystem> m_dataBaseData{};
     std::vector<FilterSystem> m_surveyQuestionAnwsers{};
+
+    std::vector<float> embedText(const std::string& apiKey, const std::string& text);
+    static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp);
+    float cosine_similarity(const std::vector<float>& a, const std::vector<float>& b);
 
     ~FilterSystem() {};
 };
