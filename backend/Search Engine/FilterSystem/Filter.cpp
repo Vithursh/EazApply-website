@@ -10,6 +10,8 @@
 #include <cstdlib>
 #include <typeinfo>
 #include <stdlib.h>
+#include <thread>
+#include <chrono>
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
@@ -50,11 +52,11 @@ void FilterSystem::loadDatabaseData() {
     string usersSummary{};
 
     string env_variable = std::getenv("GEMINI_API_KEY");
+    string userSummary = getUserSummary("Someone123@gmail.com");
 
     // Loop through the results, a row at a time.
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         cout << "This code was run: " << ++count << " number of times." << endl;
-        // cout << "The number of documents is: " << getNumOfDocuments() << endl;
         // rowsFetched++;
         FilterSystem tempInstance{};
         auto url = sqlite3_column_text(stmt, 0);
@@ -63,22 +65,25 @@ void FilterSystem::loadDatabaseData() {
         auto paragraph = sqlite3_column_text(stmt, 1);
         std::string paragraphStr = reinterpret_cast<const char*>(paragraph);
         tempInstance.setParagraph(paragraphStr);
-        // tempInstance.setRank(cosine_similarity(embedText(env_variable, paragraphStr), embedText(env_variable, usersSummary)));
-        auto emb = embedText(env_variable, paragraphStr);
-        for (const auto& val : emb) {
-            std::cout << val << " ";
+        if (count == 5 || count == 10) {
+            std::cout << "Sleeping for 1 minute..." << std::endl;
+            std::this_thread::sleep_for(std::chrono::minutes(1));
+            tempInstance.setRank(cosine_similarity(embedText(env_variable, usersSummary), embedText(env_variable, paragraphStr)));
+            std::cout << "Awake now!" << std::endl;
         }
+        // auto emb = embedText(env_variable, paragraphStr);
+        // for (const auto& val : emb) {
+            // std::cout << val << " ";
+        // }
+        // std::cout << "The user summary is: " << getUserSummary("Someone123@gmail.com") << std::endl;
         m_dataBaseData.push_back(tempInstance);
     }
 
     cout << endl << "The data inside the 'm_dataBaseData' vector is:" << endl;
     cout << "The max size a vector can hold is: " << m_dataBaseData.max_size() << endl;
     for (auto& data : m_dataBaseData) {
-        // if (data.getParagraph() == "work") {
-            std::cout << "Paragraph: " << data.getParagraph() << ", URL: " << data.getWebsiteURL() << std::endl;
-            cout << "There are '" << m_dataBaseData.size() << " many words in the 'm_dataBaseData' vector." << endl;
-            // break;
-        // }
+        std::cout << "Paragraph: " << data.getParagraph() << ", URL: " << data.getWebsiteURL() << ", Rank: " << data.getRank() << std::endl << std::endl << std::endl;
+        // cout << "There are '" << m_dataBaseData.size() << " many words in the 'm_dataBaseData' vector." << endl;
     }
 
     // Free the statement when done.
@@ -87,6 +92,57 @@ void FilterSystem::loadDatabaseData() {
     sqlite3_close(DB);
 
     cout << endl;
+}
+
+std::string FilterSystem::getUserSummary(const std::string& userEmail) {
+    CURL* curl = curl_easy_init();
+    std::string response;
+
+    const std::string& supabaseUrl = std::getenv("REACT_APP_SUPABASE_URL");
+    const std::string& supabaseKey = std::getenv("REACT_APP_SUPABASE_KEY");;
+    
+    if (!curl) {
+        throw std::runtime_error("Failed to initialize CURL");
+    }
+
+    try {
+        // Construct the API URL to only get the summary field
+        std::string url = supabaseUrl + "/rest/v1/users?select=summary&email=eq." + userEmail;
+        
+        // Set up Supabase headers
+        struct curl_slist* headers = nullptr;
+        headers = curl_slist_append(headers, ("apikey: " + supabaseKey).c_str());
+        headers = curl_slist_append(headers, ("Authorization: Bearer " + supabaseKey).c_str());
+        
+        // Configure CURL
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+        
+        // Perform request
+        CURLcode res = curl_easy_perform(curl);
+        
+        // Clean up
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+        
+        if (res != CURLE_OK) {
+            throw std::runtime_error("CURL request failed: " + std::string(curl_easy_strerror(res)));
+        }
+        
+        // Parse JSON response to get just the summary field
+        auto jsonResponse = nlohmann::json::parse(response);
+        if (!jsonResponse.empty() && jsonResponse[0].contains("summary")) {
+            return jsonResponse[0]["summary"].get<std::string>();
+        }
+        
+        return ""; // Return empty string if no summary found
+        
+    } catch (const std::exception& e) {
+        if (curl) curl_easy_cleanup(curl);
+        throw std::runtime_error("Error fetching user summary: " + std::string(e.what()));
+    }
 }
 
 // Callback to collect response data into a std::string
@@ -101,6 +157,10 @@ std::vector<float> FilterSystem::embedText(const std::string& apiKey, const std:
     std::string url =
       "https://generativelanguage.googleapis.com/v1beta/models/"
       "text-embedding-004:embedContent?key=" + apiKey;
+
+    // std::string url =
+    // "https://generativelanguage.googleapis.com/v1beta/models/"
+    // "gemini-embedding-exp-03-07:embedContent?key=" + apiKey;
 
     // 2) Build the proper JSON body
     nlohmann::json reqBody = {

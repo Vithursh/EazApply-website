@@ -25,6 +25,7 @@ class FilterSystem {
     };
     FilterSystem() {};
     void loadDatabaseData();
+    std::string getUserSummary(const std::string& userEmail);
     bool extractWordsFromString(const char* str);
 
     // Getters
