@@ -14,6 +14,9 @@
 #include <chrono>
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
+#include <pybind11/embed.h>
+#include <pybind11/stl.h>  // Enable conversion for STL containers
+#include <Python.h>
 
 // Imported files
 #include "../../sqlite3.h"
@@ -65,9 +68,9 @@ void FilterSystem::loadDatabaseData() {
         auto paragraph = sqlite3_column_text(stmt, 1);
         std::string paragraphStr = reinterpret_cast<const char*>(paragraph);
         tempInstance.setParagraph(paragraphStr);
-        if (count == 5 || count == 10) {
+        if (count % 5 == 0 && count != 0) {
             std::cout << "Sleeping for 1 minute..." << std::endl;
-            std::this_thread::sleep_for(std::chrono::minutes(1));
+            std::this_thread::sleep_for(std::chrono::seconds(20));
             tempInstance.setRank(cosine_similarity(embedText(env_variable, usersSummary), embedText(env_variable, paragraphStr)));
             std::cout << "Awake now!" << std::endl;
         }
@@ -79,12 +82,60 @@ void FilterSystem::loadDatabaseData() {
         m_dataBaseData.push_back(tempInstance);
     }
 
-    cout << endl << "The data inside the 'm_dataBaseData' vector is:" << endl;
-    cout << "The max size a vector can hold is: " << m_dataBaseData.max_size() << endl;
-    for (auto& data : m_dataBaseData) {
-        std::cout << "Paragraph: " << data.getParagraph() << ", URL: " << data.getWebsiteURL() << ", Rank: " << data.getRank() << std::endl << std::endl << std::endl;
+    // namespace py = pybind11;
+    // py::gil_scoped_acquire gil;
+    // py::scoped_interpreter guard{};
+    // if (!Py_IsInitialized()) {
+        // py::initialize_interpreter();
+    // }
+    // std::vector<std::vector<std::string>> dataSent{};
+
+    // cout << endl << "The data inside the 'm_dataBaseData' vector is:" << endl;
+    // cout << "The max size a vector can hold is: " << m_dataBaseData.max_size() << endl;
+    // for (auto& data : m_dataBaseData) {
+        // std::cout << "Paragraph: " << data.getParagraph() << ", URL: " << data.getWebsiteURL() << ", Rank: " << data.getRank() << std::endl << std::endl << std::endl;
         // cout << "There are '" << m_dataBaseData.size() << " many words in the 'm_dataBaseData' vector." << endl;
+        // std::vector <std::string> rowData{};
+        // rowData.push_back(data.getWebsiteURL());
+        // rowData.push_back(data.getParagraph());
+        // // rowData.push_back(data.getRank());
+        // dataSent.push_back(rowData);
+    // }
+
+    // Sort data based on rank in descending order
+    std::sort(m_dataBaseData.begin(), m_dataBaseData.end(), [](FilterSystem& a, FilterSystem& b) {
+        return a.getRank() > b.getRank();
+    });
+
+    // Write data to csv file
+    std::ofstream outputFile;
+    outputFile.open("/home/vithursh/Coding/EazApply/backend/File Data/job_data.csv", std::ios::out); // Open for writing, overwrite if exists
+
+    if (outputFile.is_open()) {
+        // Write header if it's a new file or you want to ensure it's there
+        outputFile << "Rank" << "," << "URL" << "," << "Paragraph" << std::endl; 
+
+        // Write some data
+        for (auto& data : m_dataBaseData) {
+            outputFile << data.getRank() << "," << data.getWebsiteURL() << "," << data.getParagraph() << std::endl;
+        }
+        
+        outputFile.close();
+        std::cout << "Data successfully written to my_data.csv" << std::endl;
+    } else {
+        std::cerr << "Error opening file!" << std::endl;
     }
+
+    // py::module_ sys = py::module_::import("sys");
+    // // std::cout << "Python executable: " << std::string(py::str(sys.attr("executable"))) << std::endl;
+    // sys.attr("path").attr("insert")(0, "/home/vithursh/Coding/EazApply/backend");
+
+    // py::module_ builtins = py::module_::import("clean");
+    // // std::string name = "Vithursh";
+    // py::object receive_job_data_function = builtins.attr("receiveJobData");
+    // // builtins.attr("receiveJobData");
+
+    // receive_job_data_function();
 
     // Free the statement when done.
     sqlite3_reset(stmt);
