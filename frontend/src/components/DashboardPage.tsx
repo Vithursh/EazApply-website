@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import React, { useEffect, useState } from 'react';
+import axios from "axios";
 import '../styles/DashboardPage.css'
 import { Link, Navigate } from 'react-router-dom';
 import '../styles/HomePage.css'
 import { useNavigate } from 'react-router-dom';
 import icon from "../../image/icon.png"
-import { BsArrowLeftShort, BsFillPersonFill, BsFillHouseDoorFill} from "react-icons/bs";
+import { BsArrowLeftShort } from "@react-icons/all-files/bs/BsArrowLeftShort";
+import { BsFillPersonFill } from "@react-icons/all-files/bs/BsFillPersonFill";
+import { BsFillHouseDoorFill } from "@react-icons/all-files/bs/BsFillHouseDoorFill";
 
 export const Icon = ({ className, size }: { className?: string, size?: string }) => {
     // 'large' corresponds to '48px', otherwise default to '24px'
@@ -20,27 +22,35 @@ export const Icon = ({ className, size }: { className?: string, size?: string })
     );
   };  
 
+export const JobCard = ({ job }: { job: any }) => (
+  <div className="w-[410px] h-[250px] bg-white rounded-xl shadow-md overflow-hidden">
+    <div className="flex">
+      {/* <img
+        className="h-full w-28 object-cover"
+        src={job.image ?? '/placeholder.jpg'}
+        alt={job.title ?? 'job image'}
+      /> */}
+      <div className="p-4">
+        <span className="block uppercase tracking-wide text-sm text-indigo-500 font-semibold">
+          Full-Time
+        </span>
+        <a href="#" className="block text-lg font-medium text-black hover:underline">
+          {job.title ?? 'Job'}
+        </a>
+        <p className="mt-2 text-gray-500">{job.paragraph}</p>
+      </div>
+    </div>
+  </div>
+);
+
 export const DashboardContext = () => {
     return (
         <>
-        <div className='absolute inset-0 flex items-center justify-center z-0 pointer-events-none'>
-            <h1 className='welcome-message'>Welcome back Vithursh!</h1>
+        <div className='absolute top-20 left-[530px] flex items-start z-0 pointer-events-none'>
+            <h1 className='text-5xl font-bold text-white'>Welcome back Vithursh!</h1>
         </div>
-        <div className='absolute inset-0 flex items-center justify-center z-0 pointer-events-none'>
-            <h5 className='job-label text-gray-500'>See your matched jobs: </h5>
-        </div>
-        
-        <div style={{ width: '410px', height: '250px' }} className="absolute top-44 right-80 inset-0 mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl m-3">
-            <div className="md:flex">
-                <div className="md:flex-shrink-0">
-                    <img className="h-full w-full object-cover md:w-18" src="/path-to-your-image.jpg" alt="image"/>
-                </div>
-            <div className="mt-2">
-                <div className="mt-1 move-header-right uppercase tracking-wide text-sm text-indigo-500 font-semibold">Job Type</div>
-                <a href="#" className="block mt-1 move-left text-lg leading-tight font-medium text-black hover:underline">Job title</a>
-                <p className="mt-20 move-right text-gray-500">Job description goes here.</p>
-            </div>
-            </div>
+        <div className='absolute top-[140px] left-[540px] flex items-start z-0 pointer-events-none'>
+            <h5 className='text-3xl text-gray-500'>See your matched jobs: </h5>
         </div>
         </>
     );
@@ -58,9 +68,30 @@ const DashboardPage: React.FC = () => {
 
     const [open, setOpen] = useState(true);
 
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/dashboard', { withCredentials: true });
+                if (response.status === 200) {
+                    // Handle successful response
+                    console.log('Dashboard data:', response.data);
+                    setData(response.data);
+                } else {
+                    // Handle error response
+                    console.log('Could not get data!!!');
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            }
+        };
+        fetchData();
+    }, []);
+
     return (
         <>
-    <div className='bg-dark text-white min-vh-100 d-flex align-items-center flex'>
+    <div className='bg-gray-900 text-white min-vh-100 d-flex align-items-center flex'>
         <div className={`bg-gray-800 h-screen pt-8 pl-0 ${open ? "w-72 pr-5 pb-5" : "w-20 pr-5 pb-5"} duration-300 relative flex items-start`}>
             <div className="flex flex-col">
                 <Link className="inline-flex items-center py-2 px-4 text-white no-underline" to="/home">
@@ -68,14 +99,15 @@ const DashboardPage: React.FC = () => {
                 </Link>
 
                 <button>
-                    <div className={`flex items-center py-2 px-4 text-white no-underline rounded-md ${open ? "bg-light-blue" : "bg-light-white"} mt-6 px-4 py-2 transition-colors duration-500 nav-item`}>
+                    <div className={`flex items-center py-2 px-4 text-white no-underline rounded-md ${open ? "bg-light-white" : "bg-light-white"} mt-6 px-4 py-2 transition-colors duration-500 nav-item`}>
                         <BsFillHouseDoorFill className={`duration-500 ${open && "rotate-[360deg]"} text-white ml-2`} size="30px" /> {open ? <span className='transition-opacity duration-300 opacity-100 categories'>Dashboard</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
                     </div>
                 </button>
 
                 <div className="fixed bottom-0 left-0 inline-block text-left">
                 <button onClick={toggleMenu}>
-                    <div className={`flex items-center py-2 px-4 text-white no-underline rounded-md ${open ? "bg-light-blue" : "bg-light-white"} mt-6 px-4 py-2 transition-colors duration-500 nav-item`}>
+                    {/* bg-light-blue */}
+                    <div className={`flex items-center py-2 px-4 text-white no-underline rounded-md ${open ? "bg-light-white" : "bg-light-white"} mt-6 px-4 py-2 transition-colors duration-500 nav-item`}>
                     <BsFillPersonFill className={`duration-500 ${open && "rotate-[360deg]"} text-white ml-2`} size="35px"/> {open ? <span className='transition-opacity duration-300 opacity-100 categories'>Users Name</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
                     </div>
                 </button>
@@ -94,6 +126,9 @@ const DashboardPage: React.FC = () => {
         </div>
     </div>
     <DashboardContext />
+    {data.map(job => (
+        <JobCard job={job} key={job.id} />
+    ))}
     </>
     );
 };

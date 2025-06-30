@@ -117,7 +117,7 @@ void FilterSystem::loadDatabaseData() {
 
         // Write some data
         for (auto& data : m_dataBaseData) {
-            outputFile << data.getRank() << "," << data.getWebsiteURL() << "," << data.getParagraph() << std::endl;
+            outputFile << data.getRank() << "|" << data.getWebsiteURL() << "|" << data.getParagraph() << std::endl;
         }
         
         outputFile.close();

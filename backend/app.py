@@ -1,5 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import cross_origin
+import sys
+sys.path.append('/home/vithursh/Coding/EazApply/backend/Search Engine/WebCrawler/WebCrawler/spiders')
+from clean import receiveJobData
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import os, re
@@ -79,6 +82,12 @@ def register():
 
     # Create a new user
     #user = supabase.auth.sign_up(username, password)
+
+
+@app.route('/dashboard', methods=['GET'])
+@cross_origin(origin='http://localhost:5173/dashboard', supports_credentials=True)
+def dashBoard():
+    return jsonify(receiveJobData()), 200
 
 
 @app.route('/survey/value-in-role', methods=['POST'])
