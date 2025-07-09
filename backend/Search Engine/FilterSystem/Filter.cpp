@@ -29,7 +29,7 @@ void FilterSystem::loadDatabaseData() {
     sqlite3_stmt *stmt{};
     sqlite3* DB{};
 
-    const char* statement = "SELECT d.URL AS DocumentURL, p.Text AS Paragraph "
+    const char* statement = "SELECT d.URL AS DocumentURL, p.Text AS Paragraph, d.Title "
                       "FROM Association AS a "
                       "INNER JOIN Paragraph AS p ON a.ParagraphID = p.ParagraphID "
                       "INNER JOIN Document AS d ON a.DocumentID = d.DocumentID "
@@ -68,6 +68,9 @@ void FilterSystem::loadDatabaseData() {
         auto paragraph = sqlite3_column_text(stmt, 1);
         std::string paragraphStr = reinterpret_cast<const char*>(paragraph);
         tempInstance.setParagraph(paragraphStr);
+        auto title = sqlite3_column_text(stmt, 2);
+        std::string titleStr = reinterpret_cast<const char*>(title);
+        tempInstance.setWebsiteTitle(titleStr);
         if (count % 5 == 0 && count != 0) {
             std::cout << "Sleeping for 1 minute..." << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(20));
@@ -113,11 +116,11 @@ void FilterSystem::loadDatabaseData() {
 
     if (outputFile.is_open()) {
         // Write header if it's a new file or you want to ensure it's there
-        outputFile << "Rank" << "," << "URL" << "," << "Paragraph" << std::endl; 
+        outputFile << "Rank" << "," << "URL" << "," << "Paragraph" << "," << "Title" << std::endl;
 
         // Write some data
         for (auto& data : m_dataBaseData) {
-            outputFile << data.getRank() << "|" << data.getWebsiteURL() << "|" << data.getParagraph() << std::endl;
+            outputFile << data.getRank() << "|" << data.getWebsiteURL() << "|" << data.getParagraph() << "|" << data.getWebsiteTitle() << std::endl;
         }
         
         outputFile.close();
@@ -302,6 +305,14 @@ float FilterSystem::getRank() {
     return m_rank;
 }
 
+void FilterSystem::setWebsiteTitle(std::string title) {
+    m_title = title;
+}
+
+string FilterSystem::getWebsiteTitle() {
+    return m_title;
+}
+
 bool FilterSystem::extractWordsFromString(const char* str) {
     bool containsSpaces = false;
     string strValue(str);
@@ -333,15 +344,4 @@ bool FilterSystem::extractWordsFromString(const char* str) {
     }
 
     return containsSpaces;
-}
-
-extern "C" {
-    void receiveData(const char** companysize, int companysizeNum, const char** industriesexcitedin, int industriesexcitedinNum, const char** levelofexperience, int levelofexperienceNum, const char** liketowork, int liketoworkNum, const char** minimumexpectedsalary, int minimumexpectedsalaryNum, const char** rolesinterestedin, int rolesinterestedinNum, const char** skillsenjoyworkingwith, int skillsenjoyworkingwithNum, const char** valueinrole, int valueinroleNum) {
-        cout << endl << "The clean data in the tables after sending it to C++:" << endl;
-        
-        FilterSystem instance;
-
-        // Load data
-        instance.loadDatabaseData();
-    }
 }

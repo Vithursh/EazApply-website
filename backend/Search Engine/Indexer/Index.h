@@ -13,12 +13,12 @@ using namespace std;
 class Index {
 
 public:
-    void indexDocument(string websiteLink);
+    void indexDocument(string websiteLink, string websiteTitle);
     const std::vector<std::pair<int, int>>& search(const std::string& term) const;
 
     void executeSQLFile(sqlite3* DB, int rc);
     
-    void insertData(sqlite3* DB, int rc, int ParagraphID, string paragraph, int DocumentID, string URL);
+    void insertData(sqlite3* DB, int rc, int ParagraphID, string paragraph, string title, int DocumentID, string URL);
 
     int checkWordExists(sqlite3* DB, int rc, string word);
 
@@ -35,7 +35,7 @@ private:
 
 // Functions pyhton can access
 extern "C" {
-    void indexDocument(const char* websiteLink);
+    void indexDocument(const char* websiteLink, const char* title);
 }
 
 #endif // INDEXER_H

@@ -20,41 +20,62 @@ export const Icon = ({ className, size }: { className?: string, size?: string })
         className={`inline ${className}`}
       />
     );
-  };  
+};  
 
 export const JobCard = ({ job }: { job: any }) => (
-  <div className="w-[410px] h-[250px] bg-white rounded-xl shadow-md overflow-hidden">
-    <div className="flex">
-      {/* <img
-        className="h-full w-28 object-cover"
-        src={job.image ?? '/placeholder.jpg'}
-        alt={job.title ?? 'job image'}
-      /> */}
-      <div className="p-4">
-        <span className="block uppercase tracking-wide text-sm text-indigo-500 font-semibold">
-          Full-Time
-        </span>
-        <a href="#" className="block text-lg font-medium text-black hover:underline">
-          {job.title ?? 'Job'}
-        </a>
-        <p className="mt-2 text-gray-500">{job.paragraph}</p>
+//   <div className="max-w-sm rounded overflow-hidden shadow-lg">
+  <div className="w-80 rounded overflow-hidden shadow-lg">
+    {/* Job image (fallback to placeholder if missing) */}
+    <img
+      className="w-full"
+      src={job.image ?? 'https://picsum.photos/seed/picsum/200/100'}
+      alt={job.title ?? 'job image'}
+    />
+
+    {/* Title & description */}
+    <div className="px-6 py-4">
+      <div className="font-bold text-xl mb-2">
+        {job.title ?? 'Untitled Position'}
       </div>
+      <p className="text-gray-700 text-base">
+        {job.description ?? 'No description provided.'}
+      </p>
+    </div>
+
+    {/* Tags (if any) */}
+    {Array.isArray(job.tags) && job.tags.length > 0 && (
+      <div className="px-6 pt-4 pb-2">
+        {job.tags.map((tag: string, idx: number) => (
+          <span
+            key={idx}
+            className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2"
+          >
+            #{tag}
+          </span>
+        ))}
+      </div>
+    )}
+
+    {/* “Apply” button */}
+    <div className="px-6 pb-4">
+      <a
+        href={job.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Apply
+      </a>
     </div>
   </div>
-);
+)
 
-export const DashboardContext = () => {
-    return (
-        <>
-        <div className='absolute top-20 left-[530px] flex items-start z-0 pointer-events-none'>
-            <h1 className='text-5xl font-bold text-white'>Welcome back Vithursh!</h1>
-        </div>
-        <div className='absolute top-[140px] left-[540px] flex items-start z-0 pointer-events-none'>
-            <h5 className='text-3xl text-gray-500'>See your matched jobs: </h5>
-        </div>
-        </>
-    );
-}
+export const DashboardContext = () => (
+    <div className="mt-8 mb-8 self-start ml-12">
+        <h1 className='text-5xl font-bold text-white'>Welcome back Vithursh!</h1>
+        <h5 className='text-3xl text-gray-500'>See your matched jobs: </h5>
+    </div>
+);
 
 const DashboardPage: React.FC = () => {
 
@@ -91,45 +112,48 @@ const DashboardPage: React.FC = () => {
 
     return (
         <>
-    <div className='bg-gray-900 text-white min-vh-100 d-flex align-items-center flex'>
-        <div className={`bg-gray-800 h-screen pt-8 pl-0 ${open ? "w-72 pr-5 pb-5" : "w-20 pr-5 pb-5"} duration-300 relative flex items-start`}>
-            <div className="flex flex-col">
-                <Link className="inline-flex items-center py-2 px-4 text-white no-underline" to="/home">
-                    <Icon className={`duration-500 ${open && "rotate-[360deg]"}`} /> {open ? <span className='transition-opacity duration-300 opacity-100 company-title'>azApply</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
-                </Link>
-
-                <button>
-                    <div className={`flex items-center py-2 px-4 text-white no-underline rounded-md ${open ? "bg-light-white" : "bg-light-white"} mt-6 px-4 py-2 transition-colors duration-500 nav-item`}>
-                        <BsFillHouseDoorFill className={`duration-500 ${open && "rotate-[360deg]"} text-white ml-2`} size="30px" /> {open ? <span className='transition-opacity duration-300 opacity-100 categories'>Dashboard</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
+        <div className="flex min-h-screen bg-gray-900 text-white">
+                {/* Sidebar */}
+                <div className={`bg-gray-800 h-screen pt-8 pl-0 ${open ? "w-70 pr-5 pb-5" : "w-20 pr-5 pb-5"} duration-300 relative flex flex-col items-start`}>
+                    <Link className="inline-flex items-center py-2 px-4 text-white no-underline" to="/home">
+                        <Icon className={`duration-500 ${open && "rotate-[360deg]"}`} /> 
+                        {open ? <span className='transition-opacity duration-300 opacity-100 company-title'>azApply</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
+                    </Link>
+                    <button>
+                        <div className={`flex items-center py-2 px-4 text-white no-underline rounded-md mt-6 px-4 py-2 transition-colors duration-500 nav-item`}>
+                            <BsFillHouseDoorFill className={`duration-500 ${open && "rotate-[360deg]"} text-white ml-2`} size="30px" /> 
+                            {open ? <span className='transition-opacity duration-300 opacity-100 categories'>Dashboard</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
+                        </div>
+                    </button>
+                    <div className="absolute bottom-0 left-0 inline-block text-left">
+                        <button onClick={toggleMenu}>
+                            <div className={`flex items-center py-2 px-4 text-white no-underline rounded-md mt-6 px-4 py-2 transition-colors duration-500 nav-item`}>
+                                <BsFillPersonFill className={`duration-500 ${open && "rotate-[360deg]"} text-white ml-2`} size="35px"/> 
+                                {open ? <span className='transition-opacity duration-300 opacity-100 categories'>Users Name</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
+                            </div>
+                        </button>
+                        <div className={`origin-top-right absolute left-1 bottom-full mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 ${isMenuOpen ? 'block' : 'hidden'}`}>
+                            <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                                <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Account settings</a>
+                                {/* <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Support</a> */}
+                                {/* <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">License</a> */}
+                                <a href="/login" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Sign out</a>
+                            </div>
+                        </div>
                     </div>
-                </button>
-
-                <div className="fixed bottom-0 left-0 inline-block text-left">
-                <button onClick={toggleMenu}>
-                    {/* bg-light-blue */}
-                    <div className={`flex items-center py-2 px-4 text-white no-underline rounded-md ${open ? "bg-light-white" : "bg-light-white"} mt-6 px-4 py-2 transition-colors duration-500 nav-item`}>
-                    <BsFillPersonFill className={`duration-500 ${open && "rotate-[360deg]"} text-white ml-2`} size="35px"/> {open ? <span className='transition-opacity duration-300 opacity-100 categories'>Users Name</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
-                    </div>
-                </button>
-                <div className={`origin-top-right absolute right-0 bottom-full mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 ${isMenuOpen ? 'block' : 'hidden'}`}>
-                    <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-                    <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Account settings</a>
-                    <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Support</a>
-                    <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">License</a>
-                    <a href="/login" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Sign out</a>
+                    <BsArrowLeftShort className={`bg-black text-dark-purple text-3xl rounded-full absolute -right-3 top-9 cursor-pointer ${!open && "rotate-180"}`} onClick={() => setOpen(!open)} />
+                </div>
+                {/* Main Content */}
+                <div className="flex-1 flex flex-col relative">
+                    <DashboardContext />
+                    <div className="flex flex-wrap gap-6 justify-center p-12">
+                        {data.map((job) => (
+                            <JobCard job={job} key={job.id} />
+                        ))}
                     </div>
                 </div>
-                </div>
-                
             </div>
-            <BsArrowLeftShort className={`bg-black text-dark-purple text-3xl rounded-full absolute -right-3 top-9 cursor-pointer ${!open && "rotate-180"}`} onClick={() => setOpen(!open)} />
-        </div>
-    </div>
-    <DashboardContext />
-    {data.map(job => (
-        <JobCard job={job} key={job.id} />
-    ))}
-    </>
+        </>
     );
 };
 

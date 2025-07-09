@@ -7,10 +7,11 @@
 #include <fstream>
 #include <cstdlib>
 #include "sqlite/sqlite3.h"
+#include "../FilterSystem/Filter.h"
 
 using namespace std;
 
-void Index::indexDocument(string websiteLink) {
+void Index::indexDocument(string websiteLink, string websiteTitle) {
 
     sqlite3* DB;
     int exit = sqlite3_open("/home/vithursh/Coding/EazApply/backend/File Data/website_data.db", &DB);
@@ -60,7 +61,7 @@ void Index::indexDocument(string websiteLink) {
         // words.erase(words.begin());  // Remove first element
         if (!paragraph.empty()) {
             int Paragraphid = rand();
-            insertData(DB, exit, Paragraphid, utilities.trimSpace(paragraph), DocumentID, websiteLink);
+            insertData(DB, exit, Paragraphid, utilities.trimSpace(paragraph), websiteTitle, DocumentID, websiteLink);
             cout << endl << Paragraphid << endl;
         }
     // }
@@ -105,7 +106,7 @@ void Index::executeSQLFile(sqlite3* DB, int rc) {
     }
 }
 
-void Index::insertData(sqlite3* DB, int rc, int ParagraphID, string paragraph, int DocumentID, string URL) {
+void Index::insertData(sqlite3* DB, int rc, int ParagraphID, string paragraph, string title, int DocumentID, string URL) {
     sqlite3_stmt *stmt;
     bool docStatus = false, wordStatus = false;
 
@@ -165,7 +166,7 @@ void Index::insertData(sqlite3* DB, int rc, int ParagraphID, string paragraph, i
     }
 
     // Insert into Document table
-    const char *sql2 = "INSERT INTO Document (DocumentID, URL) VALUES (?, ?);";
+    const char *sql2 = "INSERT INTO Document (DocumentID, URL, Title) VALUES (?, ?, ?);";
     rc = sqlite3_prepare_v2(DB, sql2, -1, &stmt, 0);
     if (rc != SQLITE_OK) {
         std::cerr << "SQL error in document insert: " << sqlite3_errmsg(DB) << std::endl;
@@ -174,6 +175,7 @@ void Index::insertData(sqlite3* DB, int rc, int ParagraphID, string paragraph, i
 
     sqlite3_bind_int(stmt, 1, DocumentID);
     sqlite3_bind_text(stmt, 2, URL.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, title.c_str(), -1, SQLITE_STATIC);
 
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
@@ -187,7 +189,7 @@ void Index::insertData(sqlite3* DB, int rc, int ParagraphID, string paragraph, i
 
     // Write to CSV if both inserts failed
     if (wordStatus == false && docStatus == false) {
-        utilities.writeToCSV(ParagraphID, DocumentID, paragraph);
+        utilities.writeToCSV(ParagraphID, DocumentID, paragraph, title);
     }
 
     // Insert into Association table
@@ -213,6 +215,11 @@ void Index::insertData(sqlite3* DB, int rc, int ParagraphID, string paragraph, i
         }
         sqlite3_finalize(stmt);
     }
+
+    FilterSystem instance{};
+
+    // Load data
+    instance.loadDatabaseData();
 }
 
 int Index::checkWordExists(sqlite3* DB, int rc, string word) {
@@ -315,9 +322,10 @@ extern "C" {
 
 	Index indexInstance;
 
-	void indexDocument(const char* websiteLink) {
-		cout << "The data recived from c++ is: " << websiteLink << endl;
+	void indexDocument(const char* websiteLink, const char* title) {
+		cout << "The data recived from c++ is: " << websiteLink << ", " << title << endl;
 		string websiteLinkString = websiteLink;
-		indexInstance.indexDocument(websiteLinkString);
+		string websiteTitleString = title;
+		indexInstance.indexDocument(websiteLinkString, websiteTitleString);
 	}
 }

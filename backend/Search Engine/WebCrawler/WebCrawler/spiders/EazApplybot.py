@@ -1,3 +1,4 @@
+from httpcore import TimeoutException
 import scrapy
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -6,13 +7,6 @@ from functools import partial
 from collections import deque
 from threading import Lock
 import pandas as pd
-import nltk
-import spacy
-import wordninja
-from nltk.corpus import words as nltk_words
-from spellchecker import SpellChecker
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -31,12 +25,14 @@ import csv
 import ctypes
 import json
 import requests
+import google.generativeai as genai
 
 from scrapy.crawler import Crawler
 
 class EazApplySpider(scrapy.Spider):
     name = 'EazApplybot'
-    start_urls = ['https://clio.wd3.myworkdayjobs.com/ClioCareerSite']
+    # 'https://lifeattiktok.com/search?job_category_id_list=6704215862603155720&keyword=&limit=12&recruitment_id_list=&location_code_list=&subject_id_list=&offset=0'
+    start_urls = ['https://cibc.wd3.myworkdayjobs.com/en-US/search/details/Analyst--Product-Development--Alternate-Solutions-Group_2505274']
     sub_urls = deque(start_urls)
     crawled_urls = set()
 
@@ -46,15 +42,6 @@ class EazApplySpider(scrapy.Spider):
     csv_urls = []
 
     new_links = []
-
-    # Word splitting function
-    nltk.download('punkt_tab')
-    nltk.download('punkt')
-    nltk.download('wordnet')
-    nltk.download('omw-1.4')  # Optional for enhanced WordNet support
-
-    # Load the spaCy model
-    nlp = spacy.load("en_core_web_sm")
 
     # Set up Chrome options for headless mode
     chrome_options = Options()
@@ -74,13 +61,6 @@ class EazApplySpider(scrapy.Spider):
         self.last_refill = time.time()  # Timestamp of the last refill
         self.lock = Lock()  # Lock to ensure thread safety
         self.db = {}  # Dictionary to store tokens for different keys
-        # Configure logging
-        # logging.basicConfig(
-        #     level=logging.INFO,
-        #     filename='/home/vithursh/Coding/EazApply/backend/File Data/scraper.log',
-        #     filemode="w",
-        #     format="%(asctime)s - %(levelname)s - %(message)s"
-        # )
 
 
     # createBucket function
@@ -237,12 +217,6 @@ class EazApplySpider(scrapy.Spider):
 
         # print("The page variable contains:",page)
         filename = f'/home/vithursh/Coding/EazApply/backend/File Data/{self.raw_pages_path}/{url_without_link}'
-        
-        # Split the URL at ".com" or ".ca"
-        if ".com" in response.url:
-            website_name = response.url.split("//")[-1].split(".com")[0]
-        elif ".ca" in response.url:
-            website_name = response.url.split("//")[-1].split(".ca")[0]
 
         # print("The website_name variable contains:",website_name)  # Outputs: "https://jobs.bell.ca"
 
@@ -256,86 +230,132 @@ class EazApplySpider(scrapy.Spider):
         # for i in self.new_links:
         #     print("All the links in the new_links are:",i)
         
-        yield from self.analyzer(response, url, filename, website_name)
+        yield from self.analyzer(response, url, filename)
+
+
+    # This is the second line of defense to check if the webpage is a job application webpage
+    def is_job_app_LLM(self, text: str) -> bool:
+        api_key = os.getenv("GEMINI_API_KEY")
+        instruction = (
+            "You are a page classifier for job sites.  Decide if the given page text "
+            "contains a **detailed job posting** (one individual job) with sections like:\n"
+            "  • Job title AND at least one of: “Responsibilities”, “Qualifications”, “Job Description”, or “How to Apply”\n"
+            "  • A paragraph (not just a list) describing the role’s duties\n"
+            "  • Application instructions or an application form\n"
+            "If you see only a list of positions or links (e.g. a homepage or careers listing), "
+            "that is **not** a detailed job posting.\n\n"
+            "If it **is** a detailed job posting page, respond with exactly:\n"
+            "  Yes\n"
+            "Otherwise respond with exactly:\n"
+            "  No\n"
+            "Do not output anything else—no punctuation, no extra words, no JSON."
+        )
+
+        payload = {
+            "contents": [
+                {"parts": [{"text": instruction}, {"text": text}]}
+            ],
+            "generationConfig": {
+                "maxOutputTokens": 3,
+                "temperature": 0.0
+            }
+        }
+
+        resp = requests.post(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + api_key,
+            json=payload,
+            headers={"Content-Type": "application/json"}
+        )
+        resp.raise_for_status()
+        raw = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        print("The LLM says:", raw)
+        time.sleep(20)
+
+        return raw.lower() == "yes"  # Return True if the response is "Yes", otherwise False
 
 
     # Checks how weather to index its text by giving it to gemini to check to see if it's a job application or not
     def is_job_application_page(self, url: str) -> bool:
-        # api_key = os.getenv("GEMINI_API_KEY")
-        # instruction = (
-        #     "You are a page classifier for job sites.  Decide if the given page text "
-        #     "contains a **detailed job posting** (one individual job) with sections like:\n"
-        #     "  • Job title AND at least one of: “Responsibilities”, “Qualifications”, “Job Description”, or “How to Apply”\n"
-        #     "  • A paragraph (not just a list) describing the role’s duties\n"
-        #     "  • Application instructions or an application form\n"
-        #     "If you see only a list of positions or links (e.g. a homepage or careers listing), "
-        #     "that is **not** a detailed job posting.\n\n"
-        #     "If it **is** a detailed job posting page, respond with exactly:\n"
-        #     "  Yes\n"
-        #     "Otherwise respond with exactly:\n"
-        #     "  No\n"
-        #     "Do not output anything else—no punctuation, no extra words, no JSON."
-        # )
-
-        # payload = {
-        #     "contents": [
-        #         {"parts": [{"text": instruction}, {"text": text}]}
-        #     ],
-        #     "generationConfig": {
-        #         "maxOutputTokens": 5,
-        #         "temperature": 0.0
-        #     }
-        # }
-
-        # resp = requests.post(
-        #     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + api_key,
-        #     json=payload,
-        #     headers={"Content-Type": "application/json"}
-        # )
-        # resp.raise_for_status()
-        # raw = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-        # print("The LLM says:", raw)
-        # time.sleep(20)
-
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.chrome_options)
-        driver.get(url)
-
-         # wait up to 10s for any JSON-LD scripts to appear
         try:
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'script[type="application/ld+json"]'))
-            )
-        except:
-            # no JSON-LD appeared in time; still proceed to parse whatever is here
-            pass
-
-        html_content = driver.page_source
-        driver.quit()
-
-        soup = BeautifulSoup(html_content, 'html.parser')
-        for tag in soup.select('script[type="application/ld+json"]'):
-            raw = tag.string or tag.text
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.chrome_options)
+            driver.get(url)
+            print("Successfully loaded the webpage")
+            time.sleep(20)
+    
             try:
-                data = json.loads(raw)
-                print("The JSON data is:", data)
+                html_content = driver.page_source
+                print("Successfully retrieved page source")
                 time.sleep(20)
-            except JSONDecodeError:
-                continue
-            entries = data if isinstance(data, list) else [data]
-            for entry in entries:
-                if entry.get("@type") == "JobPosting":
-                    return True
-        return False
+            except Exception as e:
+                print(f"Error getting page source: {str(e)}")
+                time.sleep(20)
+                return False
+            finally:
+                driver.quit()
+    
+            try:
+                soup = BeautifulSoup(html_content, 'html.parser')
+                print("Successfully parsed HTML content")
+                time.sleep(20)
+            except Exception as e:
+                print(f"Error parsing HTML with BeautifulSoup: {str(e)}")
+                time.sleep(20)
+                return False
+
+            if soup.select('script[type="application/ld+json"]'):
+                for tag in soup.select('script[type="application/ld+json"]'):
+                    print("It made it here!!!")
+                    print("The tag is:", tag)
+                    try:
+                        raw = tag.string or tag.text
+                        data = json.loads(raw)
+                        print("Successfully parsed JSON-LD data")
+                        time.sleep(20)
+                    except JSONDecodeError as e:
+                        print(f"JSON decode error: {str(e)}")
+                        time.sleep(20)
+                        continue
+                    except Exception as e:
+                        print(f"Error processing JSON-LD tag: {str(e)}")
+                        time.sleep(20)
+                        continue
+        
+                    try:
+                        entries = data if isinstance(data, list) else [data]
+                        for entry in entries:
+                            if entry.get("@type") == "JobPosting" or "application" in entry.get("@type", "").lower():
+                                print(f"Found job posting: {entry.get('@type')}")
+                                time.sleep(20)
+                                return True
+                    except Exception as e:
+                        print(f"Error processing entries: {str(e)}")
+                        time.sleep(20)
+                        continue
+            else:
+                print("No script tags with type 'application/ld+json' found")
+                # time.sleep(20)
+    
+        except Exception as e:
+            print(f"Unexpected error in is_job_application_page: {str(e)}")
+            time.sleep(20)
+            return False
+    
+        print("No job posting found in page")
+        time.sleep(20)
+        # Further processing
+        return self.is_job_app_LLM(self.scrape_page(url))
 
 
-    def clean_and_chunk(self, text: str) -> list[str]:
+    def clean_and_chunk(self, rawText: str) -> list[str]:
         api_key = os.getenv("GEMINI_API_KEY")
         url = (
+            # "https://generativelanguage.googleapis.com/v1beta/models/"
+            # "gemini-2.5-flash:generateContent"
             "https://generativelanguage.googleapis.com/v1beta/models/"
-            "gemini-1.5-flash:generateContent"
+            "gemini-2.0-flash:generateContent"
             f"?key={api_key}"
         )
-
+    
         instruction = (
             "You are a web‐page summarization assistant for job listings.\n"
             "1) Remove all navigation menus, advertisements, footers, scripts, and any HTML artifacts.\n"
@@ -348,7 +368,7 @@ class EazApplySpider(scrapy.Spider):
 
         payload = {
             "contents": [
-                {"parts": [{"text": instruction}, {"text": text}]}
+                {"parts": [{"text": instruction}, {"text": rawText}]}
             ],
             "generationConfig": {
                 "maxOutputTokens": 2048,
@@ -358,62 +378,61 @@ class EazApplySpider(scrapy.Spider):
 
         headers = {"Content-Type": "application/json"}
         resp = requests.post(url, headers=headers, json=payload)
-        resp.raise_for_status()
-
-        # Extract the raw text response
+        try:
+            resp.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            print("Error:", err)
+            print("Response text:", resp.text)
+            return ""
+    
         body = resp.json()
-        raw = body["candidates"][0]["content"]["parts"][0]["text"]
-        
-        # Split on double newlines into paragraphs
+        print("Gemini API response:", json.dumps(body, indent=2))
+    
+        try:
+            raw = body["candidates"][0]["content"]["parts"][0]["text"]
+        except (KeyError, IndexError) as e:
+            print("Error: Gemini API response missing expected fields:", e)
+            print("Full response:", json.dumps(body, indent=2))
+            return ""
+    
         paragraphs = [p.strip() for p in raw.split("\n\n") if p.strip()]
         return paragraphs
 
 
-    def remove_short_words(self, input_str):
-        input_words = input_str.split()
-        final_word = []
-        for word in input_words:
-            if len(word) != 1:
-                final_word.append(word)
-        return ' '.join(final_word)
-
-
-    # Word splitting function
-    def split_compound_word(self, input_str):
-        tokens = word_tokenize(input_str)
-
-        # Split each compound word
-        not_compound_words = []
-        for token in tokens:
-            # Ignore non-alphabetical tokens
-            if token.isalpha():
-                split_words = wordninja.split(token)
-                # If the word is a compound word, split the words
-                if len(split_words) != 1:
-                    for word in split_words:
-                        not_compound_words.append(word)
-                # If the word is not a compound word, keep it as is
+    def fetch_job_title(self, description: str) -> str:
+        api_key = os.getenv("GEMINI_API_KEY")
+        instruction = (
+            "You are an expert at reading job postings. Given the raw job posting below, "
+            "extract **only** the job title. Respond with exactly the title—no additional text."
+        )
+    
+        if isinstance(description, list):
+            print("The description is a list, converting to string...")
+            description = "\n\n".join(description)
+    
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        full_prompt = instruction + "\n\n" + description
+    
+        try:
+            result = model.generate_content(full_prompt)
+            print("Gemini SDK result:", result)
+            # Check if the result has a 'candidates' attribute and it's not empty
+            if hasattr(result, "candidates") and result.candidates:
+                candidate = result.candidates[0]
+                # Check if the candidate has 'content' and 'parts', and 'parts' is not empty
+                if hasattr(candidate, "content") and hasattr(candidate.content, "parts") and candidate.content.parts:
+                    text = candidate.content.parts[0].text
+                    return text.strip()  # Return the extracted job title, stripped of whitespace
                 else:
-                    not_compound_words.append(token)
-
-        # Join lemmatized words into a sentence
-        return ' '.join(not_compound_words)
-
-
-    # Function to convert the input string to lemmatized form
-    def get_lemmatize(self, input_str):
-        # Process the input string with spaCy NLP pipeline
-        doc = self.nlp(input_str.lower())
-
-        # Lemmatize each token and filter out punctuation
-        lemmatized = []
-        for token in doc:
-            if token.is_alpha:  # Ignore non-alphabetical tokens
-                lemma = token.lemma_  # Get the lemmatized word
-                lemmatized.append(lemma)
-
-        # Join lemmatized words into a sentence and return
-        return self.split_compound_word(self.remove_short_words(' '.join(lemmatized)))
+                    print("No parts in candidate content.")  # Log if 'parts' is missing or empty
+                    return ""
+            else:
+                print("No candidates returned from Gemini.")  # Log if 'candidates' is missing or empty
+                return ""
+        except Exception as err:
+            print("Error fetching title:", err)  # Log any other exception that occurs
+            return ""  # Return the error message as a string
 
 
     # Function to append a string to a CSV file(debugging purposes)
@@ -494,7 +513,7 @@ class EazApplySpider(scrapy.Spider):
 
 
     # Extracts HTML tags from each webpage
-    def analyzer(self, response, URL, URLFilePathName, website_name):
+    def analyzer(self, response, URL, URLFilePathName):
         print("The analyzer function has been called!!!")
         with open(URLFilePathName, 'r') as f:
             print("The URL is:", URL)
@@ -507,9 +526,32 @@ class EazApplySpider(scrapy.Spider):
                 print("The chunk before cleaning is:", text)
                 time.sleep(20)
 
-                clean_text = self.clean_and_chunk(text)
+                clean_text = ""
+                time_increment = 1
 
+                # If the Gemini api is overloaded, try again after a minute + 1
+                while not clean_text:
+                    clean_text = self.clean_and_chunk(text)
+                    if clean_text == "":
+                        print(f'The Gemini API is overloaded after calling the "clean_and_chunk" functions, trying again after {60*time_increment} seconds...')
+                        time.sleep(60*time_increment)
+                        time_increment += 1
+                
+                # Reset time_increment to 1 for the next loop
+                time_increment = 1
+
+                title = ""
+
+                # If the Gemini api is overloaded, try again after a minute + 1
+                while not title:
+                    title = self.fetch_job_title(clean_text)
+                    if title == "":
+                        print(f'The Gemini API is overloaded after calling the "fetch_job_title" functions, trying again after {60*time_increment} seconds...')
+                        time.sleep(60*time_increment)
+                        time_increment += 1
+                
                 print("The URL is: ", URL)
+                print("The title of the job is:", title)
                 print("The chunk after cleaning is:", clean_text)
                 time.sleep(100)
 
@@ -520,7 +562,7 @@ class EazApplySpider(scrapy.Spider):
                 shared_library = ctypes.CDLL(lib_path)
 
                 # Define the argument and return types
-                shared_library.indexDocument.argtypes = [ctypes.c_char_p]
+                shared_library.indexDocument.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
                 shared_library.indexDocument.restype = ctypes.c_void_p
 
                 # Using 'with' to open and write to the file
@@ -532,9 +574,10 @@ class EazApplySpider(scrapy.Spider):
 
                 # Convert the string to bytes
                 URL_bytes = URL.encode('utf-8')
+                title_bytes = title.encode('utf-8')
 
                 # Call the function
-                result = shared_library.indexDocument(URL_bytes)
+                result = shared_library.indexDocument(URL_bytes, title_bytes)
                 os.remove(URLFilePathName)
 
             # Delete an web page

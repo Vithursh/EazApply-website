@@ -4,6 +4,8 @@
 -- DELETE FROM Document;
 -- DELETE FROM Association;
 -- DROP TABLE IF EXISTS Association;
+-- DROP TABLE IF EXISTS Document;
+-- DROP TABLE IF EXISTS Paragraph;
 
 -- 1) Paragraphs (each summary paragraph, unlinked for now)
 CREATE TABLE IF NOT EXISTS Paragraph (
@@ -15,7 +17,8 @@ CREATE TABLE IF NOT EXISTS Paragraph (
 -- 2) Documents (each URL)
 CREATE TABLE IF NOT EXISTS Document (
     DocumentID   INT NOT NULL UNIQUE,
-    URL          VARCHAR(255) NOT NULL
+    URL          VARCHAR(255) NOT NULL,
+    Title          VARCHAR(255) NOT NULL
 );
 
 -- 3) Association (connects each paragraph to its document)
@@ -33,20 +36,10 @@ CREATE TABLE IF NOT EXISTS Association (
 
 -- SELECT * FROM Document;
 
--- Check for invalid WordID in Association table(debbuging purposes):
-
--- -- Check for invalid docID in Association table
--- SELECT DISTINCT docID FROM Association
--- WHERE docID NOT IN (SELECT DocumentID FROM Document);
-
--- -- Check for invalid termID in Association table
--- SELECT DISTINCT termID FROM Association
--- WHERE termID NOT IN (SELECT WordID FROM Word);
-
--- -- Check for duplicate rows in Association table
--- SELECT termID, docID, position, COUNT(*)
+-- Check for duplicates on all columns in all tables(debbuging purposes):
+-- SELECT *, COUNT(*)
 -- FROM Association
--- GROUP BY termID, docID, position
+-- GROUP BY ParagraphID, DocumentID
 -- HAVING COUNT(*) > 1;
 
 -- DELETE FROM Association 
@@ -56,12 +49,8 @@ CREATE TABLE IF NOT EXISTS Association (
 --     LIMIT 100000
 -- );
 
--- SELECT COUNT(*) FROM Association;
-
--- SELECT d.URL AS DocumentURL, p.Text AS Paragraph
--- FROM Association AS a
--- INNER JOIN Paragraph AS p ON a.ParagraphID = p.ParagraphID
--- INNER JOIN Document AS d ON a.DocumentID = d.DocumentID
--- ORDER BY d.URL;
-
--- SELECT * FROM Word WHERE word = 'work';
+SELECT d.URL AS DocumentURL, p.Text, d.Title
+FROM Association AS a
+INNER JOIN Paragraph AS p ON a.ParagraphID = p.ParagraphID
+INNER JOIN Document AS d ON a.DocumentID = d.DocumentID
+ORDER BY d.URL;

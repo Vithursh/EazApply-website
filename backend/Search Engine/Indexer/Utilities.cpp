@@ -160,7 +160,7 @@ string Utilities::trimSpace(string str) {
 }
 
 // Used for debugging
-void Utilities::writeToCSV(int termID, int docID, const std::string& word) {
+void Utilities::writeToCSV(int termID, int docID, const std::string& word, std::string& title) {
     std::ofstream csvFile;
     try {
         csvFile.open("/home/vithursh/Coding/EazApply/backend/File Data/not_index_data.csv", std::ios::app);  // Append mode

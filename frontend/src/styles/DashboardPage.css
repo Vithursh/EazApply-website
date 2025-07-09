@@ -23,12 +23,6 @@
     transition: color 1s ease, background-color 1s ease !important;
 }
 
-.welcome-message {
-    color: white;
-    padding-right: 450px;
-    padding-bottom: 750px; 
-}
-
 .job-label {
     color: white;
     padding-right: 670px;
