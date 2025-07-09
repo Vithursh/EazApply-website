@@ -22,9 +22,9 @@ const Navbar = () => {
         </div>
         <div className="flex w-full pt-2 content-center justify-between md:w-1/2 md:justify-end">
           <ul className="list-reset flex justify-between flex-1 md:flex-none items-center">
-            <li className="mr-3">
+            {/* <li className="mr-3">
               <Link className="inline-block py-2 px-4 text-white no-underline nav-link nav-item" to="/premium">Premium</Link>
-            </li>
+            </li> */}
             {/* Uncomment the below line if you have a login route */}
             {/* <li className="mr-3">
               <Link className="inline-block py-2 px-4 text-white no-underline nav-link" to="/login">Login</Link>
