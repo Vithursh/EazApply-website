@@ -38,6 +38,9 @@ export const JobCard = ({ job }: { job: any }) => (
         {job.title ?? 'Untitled Position'}
       </div>
       <p className="text-gray-700 text-base">
+        {job.companyName ?? 'No company name provided.'}
+      </p>
+      <p className="text-gray-700 text-base">
         {job.description ?? 'No description provided.'}
       </p>
     </div>
@@ -97,6 +100,7 @@ const DashboardPage: React.FC = () => {
                 const response = await axios.get('http://localhost:5000/dashboard', { withCredentials: true });
                 if (response.status === 200) {
                     // Handle successful response
+                    console.log("Dashboard data refreshed every 5 seconds...");
                     console.log('Dashboard data:', response.data);
                     setData(response.data);
                 } else {
@@ -108,28 +112,97 @@ const DashboardPage: React.FC = () => {
             }
         };
         fetchData();
+
+        // Refresh the data every 5 seconds
+        const intervalId = setInterval(fetchData, 5000); // Fetch every 5 seconds
+
+        return () => clearInterval(intervalId); // Cleanup on component unmount
     }, []);
 
     return (
         <>
         <div className="flex min-h-screen bg-gray-900 text-white">
                 {/* Sidebar */}
-                <div className={`bg-gray-800 h-screen pt-8 pl-0 ${open ? "w-70 pr-5 pb-5" : "w-20 pr-5 pb-5"} duration-300 relative flex flex-col items-start`}>
-                    <Link className="inline-flex items-center py-2 px-4 text-white no-underline" to="/home">
-                        <Icon className={`duration-500 ${open && "rotate-[360deg]"}`} /> 
+                <aside className={`bg-gray-800 h-screen sticky top-0 pt-8 pl-0 ${open ? "w-70 pr-5 pb-5" : "w-20 pr-5 pb-5"} duration-300 relative flex flex-col items-start`}>
+                    <Link className="inline-flex items-center py-2 px-4 text-white no-underline" to="/">
+                        <Icon className={`-ml-1 duration-500 ${open && "rotate-[360deg]"}`} /> 
                         {open ? <span className='transition-opacity duration-300 opacity-100 company-title'>azApply</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
                     </Link>
                     <button>
                         <div className={`flex items-center py-2 px-4 text-white no-underline rounded-md mt-6 px-4 py-2 transition-colors duration-500 nav-item`}>
-                            <BsFillHouseDoorFill className={`duration-500 ${open && "rotate-[360deg]"} text-white ml-2`} size="30px" /> 
-                            {open ? <span className='transition-opacity duration-300 opacity-100 categories'>Dashboard</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
+                            <BsFillHouseDoorFill className={`-ml-0 duration-500 ${open && "rotate-[360deg]"} text-white ml-2`} size="30px" /> 
+                            {open
+                              ? (
+                                  <span
+                                    className="
+                                      inline-block
+                                      transition-[width,opacity]
+                                      duration-300
+                                      origin-left
+                                      overflow-hidden
+                                      w-auto
+                                      opacity-100
+                                      categories
+                                    "
+                                  >
+                                    Dashboard
+                                  </span>
+                                )
+                              : (
+                                  <span
+                                    className="
+                                      inline-block
+                                      transition-[width,opacity]
+                                      duration-300
+                                      origin-left
+                                      overflow-hidden
+                                      w-0
+                                      opacity-0
+                                    "
+                                  >
+                                    azApply
+                                  </span>
+                                )
+                            }
                         </div>
                     </button>
                     <div className="absolute bottom-0 left-0 inline-block text-left">
                         <button onClick={toggleMenu}>
                             <div className={`flex items-center py-2 px-4 text-white no-underline rounded-md mt-6 px-4 py-2 transition-colors duration-500 nav-item`}>
-                                <BsFillPersonFill className={`duration-500 ${open && "rotate-[360deg]"} text-white ml-2`} size="35px"/> 
-                                {open ? <span className='transition-opacity duration-300 opacity-100 categories'>Users Name</span> : <span className='transition-opacity duration-300 opacity-0'>azApply</span>}
+                                <BsFillPersonFill className={`-ml-0 duration-500 ${open && "rotate-[360deg]"} text-white ml-2`} size="30px"/>
+                                {open
+                                  ? (
+                                      <span
+                                        className="
+                                          inline-block
+                                          transition-[width,opacity]
+                                          duration-300
+                                          origin-left
+                                          overflow-hidden
+                                          w-auto
+                                          opacity-100
+                                          categories
+                                        "
+                                      >
+                                        User Name
+                                      </span>
+                                    )
+                                  : (
+                                      <span
+                                        className="
+                                          inline-block
+                                          transition-[width,opacity]
+                                          duration-300
+                                          origin-left
+                                          overflow-hidden
+                                          w-0
+                                          opacity-0
+                                        "
+                                      >
+                                        azApply
+                                      </span>
+                                    )
+                                }
                             </div>
                         </button>
                         <div className={`origin-top-right absolute left-1 bottom-full mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 ${isMenuOpen ? 'block' : 'hidden'}`}>
@@ -142,7 +215,7 @@ const DashboardPage: React.FC = () => {
                         </div>
                     </div>
                     <BsArrowLeftShort className={`bg-black text-dark-purple text-3xl rounded-full absolute -right-3 top-9 cursor-pointer ${!open && "rotate-180"}`} onClick={() => setOpen(!open)} />
-                </div>
+                </aside>
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col relative">
                     <DashboardContext />

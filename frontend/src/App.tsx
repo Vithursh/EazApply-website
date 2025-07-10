@@ -77,7 +77,7 @@ function Layout() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/home" element={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/forgot" element={<ResetPasswordPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />

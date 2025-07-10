@@ -32,7 +32,7 @@ from scrapy.crawler import Crawler
 class EazApplySpider(scrapy.Spider):
     name = 'EazApplybot'
     # 'https://lifeattiktok.com/search?job_category_id_list=6704215862603155720&keyword=&limit=12&recruitment_id_list=&location_code_list=&subject_id_list=&offset=0'
-    start_urls = ['https://cibc.wd3.myworkdayjobs.com/en-US/search/details/Analyst--Product-Development--Alternate-Solutions-Group_2505274']
+    start_urls = ['https://cibc.wd3.myworkdayjobs.com/en-US/search/details/Relationship-Manager--Business-Banking_2514727']
     sub_urls = deque(start_urls)
     crawled_urls = set()
 
