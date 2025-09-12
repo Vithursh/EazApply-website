@@ -26,7 +26,7 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 
 // Remove once you figure out how to import enviroment variables
-import { supabase } from './utils/supabaseClient';
+import supabase from './utils/supabaseClient';
 
 function PremiumPage() {
   return (

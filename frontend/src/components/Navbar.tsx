@@ -29,34 +29,34 @@ const Navbar = () => {
             {/* <li className="mr-3">
               <Link className="inline-block py-2 px-4 text-white no-underline nav-link" to="/login">Login</Link>
             </li> */}
-            <li className="mr-3">
+            {/* <li className="mr-3">
               <Link className="inline-block py-2 px-4 text-white no-underline nav-link nav-item" to="/dashboard">Dashboard</Link>
-            </li>
+            </li> */}
             <li className="mr-3">
               <Link className="inline-block py-2 px-4 text-white no-underline nav-link nav-item" to="/register">Sign up</Link>
             </li>
-            <li className="mr-3">
+            {/* <li className="mr-3">
               <Link className="inline-block py-2 px-4 text-white no-underline nav-link nav-item" to="/survey">Survey</Link>
-            </li>
-            <li className="mr-3">
+            </li> */}
+            {/* <li className="mr-3">
               <a className="inline-block py-2 px-4 text-white no-underline nav-link">|</a>
-            </li>
-            <li className="mr-3">
-              <div className="relative inline-block">
-                <button onClick={toggleMenu} className="inline-flex items-center text-gray-200 hover:text-white position-menu nav-item">
-                  <AccountCircleIcon fontSize="large"/>
-                  <span className="ml-1 nav-link">Profile</span>
-                  <svg className="fill-current h-4 w-4 mt-1 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5 6l5 5 5-5z"/></svg>
-                </button>
+            </li> */}
+            {/* <li className="mr-3"> */}
+              {/* <div className="relative inline-block"> */}
+                {/* <button onClick={toggleMenu} className="inline-flex items-center text-gray-200 hover:text-white position-menu nav-item"> */}
+                  {/* <AccountCircleIcon fontSize="large"/> */}
+                  {/* <span className="ml-1 nav-link">Profile</span> */}
+                  {/* <svg className="fill-current h-4 w-4 mt-1 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5 6l5 5 5-5z"/></svg> */}
+                {/* </button> */}
                 {/* Conditionally render the dropdown menu based on isMenuOpen state */}
-                {isMenuOpen && (
-                  <ul className="absolute right-0 top-0 mt-12 p-2 bg-white border rounded shadow-lg me-custom">
-                    <li><a className="block px-4 py-2 text-gray-800 hover:bg-indigo-500 hover:text-white no-underline hover:no-underline" href="#">Account</a></li>
-                    <li><a className="block px-4 py-2 text-gray-800 hover:bg-indigo-500 hover:text-white no-underline hover:no-underline" href="#">Sign out</a></li>
-                  </ul>
-                )}
-              </div>
-            </li>
+                {/* {isMenuOpen && ( */}
+                  {/* <ul className="absolute right-0 top-0 mt-12 p-2 bg-white border rounded shadow-lg me-custom"> */}
+                    {/* <li><a className="block px-4 py-2 text-gray-800 hover:bg-indigo-500 hover:text-white no-underline hover:no-underline" href="#">Account</a></li> */}
+                    {/* <li><a className="block px-4 py-2 text-gray-800 hover:bg-indigo-500 hover:text-white no-underline hover:no-underline" href="#">Sign out</a></li> */}
+                  {/* </ul> */}
+                {/* )} */}
+              {/* </div> */}
+            {/* </li> */}
           </ul>
         </div>
       </div>
