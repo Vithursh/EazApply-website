@@ -38,50 +38,64 @@ def register():
     email = request.json['email']
 
     # Select all rows from a table and get a specific attribute
-    response = supabase.table("users").select("email").execute()
+    # response = supabase.table("users").select("email").execute()
 
     # print("Data:\n", response.data)
 
-    containSameEmail = False
+    # containSameEmail = False
 
-    for row in response.data:
-        if email == row['email']:
-            containSameEmail = True
+    # for row in response.data:
+    #     if email == row['email']:
+    #         containSameEmail = True
 
-    # Email validation
-    regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(.[A-Z|a-z]{2,})+')
+    # # Email validation
+    # regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(.[A-Z|a-z]{2,})+')
 
-    # Check for empty fields first
-    if username == "":
-        print("Username is empty")
-        return jsonify({'error': 'Username is empty'}), 201
-    elif password == "":
-        print("Password is empty")
-        return jsonify({'error': 'Password is empty'}), 201
-    elif email == "":
-        print("Email is empty")
-        return jsonify({'error': 'Email is empty'}), 201
-    elif containSameEmail == True:
-        print("This email has already been registered with")
-        return jsonify({'error': 'This email has already been registered with'}), 201
-    elif not re.fullmatch(regex, email):
-        print("Email was not formatted correctly")
-        return jsonify({'error': 'Email was not formatted correctly'}), 201
+    # # Check for empty fields first
+    # if username == "":
+    #     print("Username is empty")
+    #     return jsonify({'error': 'Username is empty'}), 201
+    # elif password == "":
+    #     print("Password is empty")
+    #     return jsonify({'error': 'Password is empty'}), 201
+    # elif email == "":
+    #     print("Email is empty")
+    #     return jsonify({'error': 'Email is empty'}), 201
+    # elif containSameEmail == True:
+    #     print("This email has already been registered with")
+    #     return jsonify({'error': 'This email has already been registered with'}), 201
+    # elif not re.fullmatch(regex, email):
+    #     print("Email was not formatted correctly")
+    #     return jsonify({'error': 'Email was not formatted correctly'}), 201
     
-    # If all checks pass, insert the new user into the 'user' table
+    # # If all checks pass, insert the new user into the 'user' table
     
     
-    # After a user signs up...
-    user = supabase.auth.sign_up({"email": email, "password": password})
+    # # After a user signs up...
+    # user = supabase.auth.sign_up({"email": email, "password": password})
     
-    # Insert a new row into the 'users' table
-    supabase.table('users').insert({'user_id': user.data.id, 'username': username}).execute()
+    # # Insert a new row into the 'users' table
+    # supabase.table('users').insert({'user_id': user.data.id, 'username': username}).execute()
 
-    # user = supabase.table('users').insert({'username': username, 'email' : email, 'password': password}).execute()
-    return jsonify({'message': 'User created successfully'}), 200
+    # # user = supabase.table('users').insert({'username': username, 'email' : email, 'password': password}).execute()
+    # return jsonify({'message': 'User created successfully'}), 200
 
-    # Create a new user
-    #user = supabase.auth.sign_up(username, password)
+    # first check if email exists
+    # this could be using supabase.auth.admin.get_user_by_email
+    user = supabase.auth.admin.get_user_by_email(email)
+    if user is not None:
+        # email already used
+        return {"success": False, "error": "Email already in use"}, 409
+    
+    # else proceed to sign up
+    result = supabase.auth.sign_up({ "email": email, "password": password })
+    if result.error:
+        # handle error
+        return {"success": False, "error": result.error.message}, 400
+    else:
+        # success
+        # maybe also insert username into a “profiles” table or whatever
+        return {"success": True, "data": result.user}, 201
 
 
 @app.route('/dashboard', methods=['GET'])
