@@ -1,9 +1,13 @@
-import React from 'react';
-
+import React, {useState, useEffect} from 'react';
 import '../styles/LoginPage.css'
 import RegisterPage from './RegisterPage';
 import Navbar from './Navbar';
 import { Link } from 'react-router-dom';
+import supabase from "../utils/supabaseClient";
+
+//
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export const LoginContext = () => {
     return (
@@ -17,12 +21,66 @@ export const LoginContext = () => {
 }
 
 const LoginPage: React.FC = () => {
+
+    // Initialize state variables for username, email, and password with empty strings
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    // Notifcation 
+    const notify = (message : string) => {
+        toast(message, {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: false,
+            draggable: false,
+            progress: undefined,
+            style: {
+                backgroundColor: 'hsl(200, 60%, 80%)', // A soft baby blue hue
+                color: '#000000', // Set text color to black for contrast
+        },
+        });
+    };
+
+    // Define an asynchronous function to handle form submission
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        // Prevent the default form submission behavior
+        event.preventDefault();
+        setLoading(true);
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+       
+        if (!email) {
+            notify("Please enter an email address.");
+            // Redirect to login page or show a modal
+            return;
+        } else if (!password) {
+            notify("Please enter a password.");
+            // Redirect to login page or show a modal
+            return;
+        } else {
+            if (error?.status)
+                notify(error.message);
+            else
+                notify("Login success!!!");
+        }
+
+        setLoading(false);
+        setEmail("");
+        setPassword("");
+    };    
+
     return (
         <>
         <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center">
             <div className="w-full max-w-md p-6 mt-[200px]"> {/* Added mt-32 for top margin */}
                 <div className="bg-sky-100 rounded-lg shadow-xl p-8">
-                    <form className="space-y-6 h-[300px]">
+                    <form onSubmit={handleSubmit} className="space-y-6 h-[300px]">
                         <div>
                             <h2 className="text-2xl font-bold mb-8 text-center">Login</h2>
                             <div className="space-y-4">
@@ -30,18 +88,24 @@ const LoginPage: React.FC = () => {
                                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
                                     <input
                                         type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
                                         id="email"
                                         name="email"
                                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        // required
                                     />
                                 </div>
                                 <div>
                                     <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
                                     <input
                                         type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
                                         id="password"
                                         name="password"
                                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        // required
                                     />
                                 </div>
                             </div>
@@ -64,6 +128,7 @@ const LoginPage: React.FC = () => {
             </div>
         </div>
         <LoginContext />
+        <ToastContainer theme="dark" />
         </>
     );
 };
