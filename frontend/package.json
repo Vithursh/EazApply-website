@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "webpack --mode development --config webpack.config.cjs",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
@@ -41,24 +40,14 @@
     "@types/node": "^20.14.8",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
-    "@types/webpack": "^5.28.5",
     "@vitejs/plugin-react": "^3.1.0",
     "autoprefixer": "^10.4.19",
-    "css-loader": "^7.1.2",
     "dotenv": "^16.4.5",
-    "file-loader": "^6.2.0",
     "postcss": "^8.4.38",
-    "postcss-loader": "^8.1.1",
-    "sass-loader": "^16.0.5",
-    "style-loader": "^4.0.0",
     "tailwindcss": "^3.4.3",
-    "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.2",
-    "url-loader": "^4.1.1",
-    "vite": "^4.1.0",
-    "webpack": "^5.92.0",
-    "webpack-cli": "^5.1.4"
+    "vite": "^4.1.0"
   },
   "browserslist": [
     ">0.2%",
