@@ -8,6 +8,10 @@ import icon from "../../image/icon.png"
 import { BsArrowLeftShort } from "@react-icons/all-files/bs/BsArrowLeftShort";
 import { BsFillPersonFill } from "@react-icons/all-files/bs/BsFillPersonFill";
 import { BsFillHouseDoorFill } from "@react-icons/all-files/bs/BsFillHouseDoorFill";
+import type { Session } from '@supabase/supabase-js';
+// import { Session } from 'inspector';
+import { supabase } from '../utils/supabaseClient'
+// import { Session } from 'node:inspector';
 
 export const Icon = ({ className, size }: { className?: string, size?: string }) => {
     // 'large' corresponds to '48px', otherwise default to '24px'
@@ -80,7 +84,20 @@ export const DashboardContext = () => (
     </div>
 );
 
+function signOut() {
+  console.log("Signing out...");
+  const handleLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error.message)
+    }
+  }
+}
+
 const DashboardPage: React.FC = () => {
+    const [session, setSession] = useState<Session | null>(null);
+
+    console.log("Current session:", session);
 
     // State to control the visibility of the dropdown menu
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -210,7 +227,7 @@ const DashboardPage: React.FC = () => {
                                 <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Account settings</a>
                                 {/* <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Support</a> */}
                                 {/* <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">License</a> */}
-                                <a href="/login" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">Sign out</a>
+                                <a href="/login" onClick={signOut} className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">{session ? 'Sign out' : 'Sign In'}</a>
                             </div>
                         </div>
                     </div>

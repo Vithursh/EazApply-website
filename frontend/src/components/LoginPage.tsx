@@ -3,7 +3,7 @@ import '../styles/LoginPage.css'
 import RegisterPage from './RegisterPage';
 import Navbar from './Navbar';
 import { Link } from 'react-router-dom';
-import supabase from "../utils/supabaseClient";
+import { supabase } from "../utils/supabaseClient";
 
 //
 import { ToastContainer, toast } from 'react-toastify';

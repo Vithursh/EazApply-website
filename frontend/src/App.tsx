@@ -21,7 +21,7 @@ import SkillsEnjoyWorkingWithPage from './components/SurveyQuestions/SkillsEnjoy
 import MinimumExpectedSalaryPage from './components/SurveyQuestions/MinimumExpectedSalaryPage';
 
 // Supabase
-import supabase from './utils/supabaseClient';
+import { supabase } from './utils/supabaseClient';
 
 function PremiumPage() {
   return (

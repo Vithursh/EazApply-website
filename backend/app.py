@@ -13,8 +13,8 @@ app = Flask(__name__)
 load_dotenv()
 
 # Initialize Supabase client variables
-supabase_url = os.getenv('REACT_APP_SUPABASE_URL')
-supabase_key = os.getenv('REACT_APP_SUPABASE_KEY')
+supabase_url = os.getenv('VITE_SUPABASE_URL')
+supabase_key = os.getenv('VITE_SUPABASE_ANON_KEY')
 
 # Initialize Supabase client
 url: str = supabase_url

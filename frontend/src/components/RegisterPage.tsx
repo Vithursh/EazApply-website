@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import supabase from "../utils/supabaseClient";
+import { supabase } from "../utils/supabaseClient";
 import '../styles/RegisterPage.css'
 // import LoginPage from './LoginPage';
 // import Navbar from './Navbar';
