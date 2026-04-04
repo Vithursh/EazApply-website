@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate, Navigate, Router, BrowserRouter } from 'react-router-dom';
 import LoginPage from "./components/LoginPage";
 import RegisterPage from "./components/RegisterPage";
 import Navbar from './components/Navbar';
@@ -7,6 +7,7 @@ import HomePage from './components/HomePage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import DashboardPage from './components/DashboardPage';
 import { BasicPlan, ElitePlan, StandardPlan } from './components/PremiumPage';
+import ProtectedRoute from './components/ProtectedRoute';
 import type { Session } from '@supabase/supabase-js';
 
 // Survey pages
@@ -59,19 +60,6 @@ function AuthStateListener() {
 
 function App() {
   const location = useLocation();
-  const [session, setSession] = useState<Session | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   return (
     <>
@@ -79,25 +67,31 @@ function App() {
       {location.pathname !== '/dashboard' &&
        !location.pathname.startsWith('/survey') &&
        <Navbar />}
+          {/* <BrowserRouter> */}
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/" element={<HomePage />} />
+              <Route path="/premium" element={<PremiumPage />} />
+              <Route path="/forgot" element={<ResetPasswordPage />} />
 
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/" element={<HomePage />} />
-        <Route path="/premium" element={<PremiumPage />} />
-        <Route path="/forgot" element={<ResetPasswordPage />} />
-        <Route path="/dashboard" element={session ? <DashboardPage /> : <div>Redirecting to login...</div>} />
+              {/* Protected routes wrapped in the ProtectedRoute component */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/survey" element={<SurveyPage />} />
+                <Route path="/survey/value-in-role" element={<ValueInRolePage />} />
+                <Route path="/survey/roles-interested-in" element={<RolesInterestedInPage />} />
+                <Route path="/survey/like-to-work" element={<LikeToWorkPage />} />
+                <Route path="/survey/level-of-experience" element={<LevelOfExperiencePage />} />
+                <Route path="/survey/company-size" element={<CompanySizePage />} />
+                <Route path="/survey/industries-excited-in" element={<IndustriesExcitedInPage />} />
+                <Route path="/survey/skills-enjoy-working-with" element={<SkillsEnjoyWorkingWithPage />} />
+                <Route path="/survey/minimum-expected-salary" element={<MinimumExpectedSalaryPage />} />
+              </Route>
 
-        <Route path="/survey" element={<SurveyPage />} />
-        <Route path="/survey/value-in-role" element={<ValueInRolePage />} />
-        <Route path="/survey/roles-interested-in" element={<RolesInterestedInPage />} />
-        <Route path="/survey/like-to-work" element={<LikeToWorkPage />} />
-        <Route path="/survey/level-of-experience" element={<LevelOfExperiencePage />} />
-        <Route path="/survey/company-size" element={<CompanySizePage />} />
-        <Route path="/survey/industries-excited-in" element={<IndustriesExcitedInPage />} />
-        <Route path="/survey/skills-enjoy-working-with" element={<SkillsEnjoyWorkingWithPage />} />
-        <Route path="/survey/minimum-expected-salary" element={<MinimumExpectedSalaryPage />} />
-      </Routes>
+            </Routes>
+          {/* </BrowserRouter> */}
     </>
   );
 }
