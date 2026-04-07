@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { BsArrowRight } from "react-icons/bs";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../../styles/MinimumExpectedSalaryPage.css'
 import axios from 'axios';
 
 const MinimumExpectedSalaryPage: React.FC = () => {
+    const { uuid } = useParams();
 
     const [buttonLabels, setButtonLabels] = useState([
       'Adobe Illustrator', 'Business Analytics', 'Excel/Numbers/Sheets', 
@@ -48,7 +49,7 @@ const MinimumExpectedSalaryPage: React.FC = () => {
       if (value != 0) {
         // console.log(clickedLabels.length);
         try {
-          const response = await axios.post('http://localhost:5000/survey/minimum-expected-salary', {
+          const response = await axios.post(`http://localhost:5000/survey/minimum-expected-salary/${uuid}`, {
             option: value
           }, {
             headers: {
@@ -64,7 +65,7 @@ const MinimumExpectedSalaryPage: React.FC = () => {
             alert(result.error);
           }
     
-          navigate('/register');
+          navigate(`/dashboard/${uuid}`);
           console.log("You selected",value+"K USD")
         } catch (error) {
           console.error(`Error: ${error}`);

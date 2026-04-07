@@ -4,14 +4,23 @@ import { Link } from 'react-router-dom';
 import '../../styles/SurveyPage.css'
 import { BsArrowRight } from "react-icons/bs";
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../utils/supabaseClient';
 
 const SurveyPage: React.FC = () => {
 
     const navigate = useNavigate();
 
-    const goToNextPage= () => {
-        navigate('/survey/value-in-role');
-    }
+    const goToNextPage = () => {
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+        try {
+          const uuid = session?.user.id // 1. Get the ID first
+          console.log("The user ID is:", uuid);
+          navigate(`/survey/value-in-role/${uuid}`); // 2. Navigate using the result
+        } catch (error) {
+          console.error("Failed to get UUID", error);
+        }
+      });
+    };
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-800 text-white">

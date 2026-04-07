@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 
 import { BsArrowRight } from "react-icons/bs";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../../styles/SkillsEnjoyWorkingWithPage.css'
 import axios from 'axios';
 
 const SkillsEnjoyWorkingWithPage: React.FC = () => {
+    // The key 'uuid' here must match the name used in your Route path (:uuid)
+    const { uuid } = useParams();
+    console.log("The UUID from the URL is:", uuid); // This should log the correct UUID when the component renders
 
     const [buttonLabels, setButtonLabels] = useState([
       'Adobe Illustrator', 'Business Analytics', 'Excel/Numbers/Sheets', 
@@ -47,7 +50,7 @@ const SkillsEnjoyWorkingWithPage: React.FC = () => {
       if (clickedLabels.length > 0) {
         console.log(clickedLabels.length);
         try {
-          const response = await axios.post('http://localhost:5000/survey/skills-enjoy-working-with', {
+          const response = await axios.post(`http://localhost:5000/survey/skills-enjoy-working-with/${uuid}`, {
             option: clickedLabels
           }, {
             headers: {
@@ -63,7 +66,7 @@ const SkillsEnjoyWorkingWithPage: React.FC = () => {
             alert(result.error);
           }
     
-          navigate('/survey/minimum-expected-salary');
+          navigate(`/survey/minimum-expected-salary/${uuid}`);
         } catch (error) {
           console.error(`Error: ${error}`);
         }

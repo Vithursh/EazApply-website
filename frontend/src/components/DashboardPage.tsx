@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from "axios";
 import '../styles/DashboardPage.css'
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import '../styles/HomePage.css'
 import { useNavigate } from 'react-router-dom';
 import icon from "../../image/icon.png"
@@ -86,6 +86,9 @@ export const DashboardContext = () => (
 );
 
 const DashboardPage: React.FC = () => {
+    // The key 'uuid' here must match the name used in your Route path (:uuid)
+    const { uuid } = useParams();
+    console.log("The UUID from the URL is:", uuid); // This should log the correct UUID when the component renders
     const navigate = useNavigate();
     // await supabase.auth.getUser();
     const [session, setSession] = useState<any | null>(null);
@@ -138,7 +141,7 @@ const DashboardPage: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/dashboard', { withCredentials: true });
+                const response = await axios.get('http://localhost:5000/dashboard', { params: { userId: uuid }, withCredentials: true });
                 if (response.status === 200) {
                     // Handle successful response
                     console.log("Dashboard data refreshed every 5 seconds...");
