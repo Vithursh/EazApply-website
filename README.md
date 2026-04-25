@@ -78,7 +78,7 @@ My inspiration to create this project came from job boards like LinkedIn and Ind
    ```
 4. Start the frontend:
    ```bash
-   npm start
+   npm run dev
    ```
 5. Navigate to the backend by creating a new CLI window:
    ```bash
