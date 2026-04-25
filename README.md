@@ -74,7 +74,7 @@ My inspiration to create this project came from job boards like LinkedIn and Ind
    ```
 3. Navigate to the frontend:
    ```bash
-   cd fontend
+   cd frontend
    ```
 4. Start the frontend:
    ```bash
