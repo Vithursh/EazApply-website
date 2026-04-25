@@ -1,15 +1,90 @@
-# README.md
+![](https://github.com/Vithursh/EazApply-website/blob/236dd64ff4f92aabd88bc755ec111058416b3c2f/EazApply.png)
 
 ## Description
+---
 
-... (existing content) ...
+Eazapply is a website designed to help users find jobs based on their educational background, qualifications, and job preferences. This is achieved through a survey that the user fills out. The survey takes the user's qualifications and job preferences as inputs to filter out jobs that correlate with the user's criteria.
 
-**MVP Note:** This project aims to deliver a minimal viable product that showcases the core functionality.
+**Note:** This software is an MVP (Minimum Viable Product).
 
-## Frontend
+---
 
-Following the backend architecture image, we implement the frontend using the following technologies:
-- **React**: A JavaScript library for building user interfaces.
-- **Tailwind CSS**: A utility-first CSS framework for designing custom user interfaces quickly.
+## Inspiration
+---
 
-... (existing content) ...
+My inspiration to create this project came from job boards like LinkedIn and Indeed. One common issue I noticed with these job boards is they recommend the same jobs even though the user has already applied to them. EazApply solves this problem by filtering out job applications that the user has already applied to or is not qualified for.
+
+## Table of Contents
+
+- Components
+- Features
+- Installation
+
+## Components
+
+- #### Backend (recommendation engine)
+  - **Web crawler** (written in Python)
+    - Crawls web pages to gather data by following each link of a website using the BFS algorithm
+    - Handles HTML pages
+    - Respects `robots.txt` rules
+    - Ensures not to overload each website by using a rate-limiting algorithm known as token bucket
+  - **Indexer** (written in C++)
+    - Processes and stores the crawled data in an SQLite database using an inverted index schema
+    - Creates an index for fast word retrieval, which helps the filtering system retrieve jobs that correlate with the user's job preferences
+    - Supports full-text search capabilities
+  - **Filtering system** (written in C++)
+    - Filters out job applications that do not correlate with the user's educational background, qualifications, and job preferences
+    - Applies various criteria to refine search results
+    - Ensures data quality
+
+![](https://github.com/Vithursh/EazApply-website/blob/30da6bc9af3c44c7fb8eb2684db9fa14b1af97a9/Search-Engine-Architecture.png)
+
+- #### Frontend
+  - **React**
+    - A JavaScript library for building interactive user interfaces
+  - **Tailwind CSS**
+    - A utility-first CSS framework for styling and designing custom user interfaces
+
+## Features
+---
+- Responsive design
+- User authentication
+- Sign in and out of the site
+- Create an account
+- Real-time data updates
+  - Automatically displays new jobs the user is likely to get based on their qualifications
+
+## Installation
+
+---
+
+#### Running locally
+
+##### Clone the repository
+
+##### Be sure you have Node.js >= 16 installed.
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Vithursh/EazApply-website.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd EazApply-website
+   ```
+3. Navigate to the frontend:
+   ```bash
+   cd fontend
+   ```
+4. Start the frontend:
+   ```bash
+   npm start
+   ```
+5. Navigate to the backend by creating a new CLI window:
+   ```bash
+   cd backend
+   ```
+6. Run the backend:
+   ```bash
+   python3 app.py
+   ```
