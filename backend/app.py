@@ -6,6 +6,7 @@ from clean import receiveJobData
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import os, re
+import ctypes
 import requests
 
 app = Flask(__name__)
@@ -101,12 +102,32 @@ def register():
 @app.route('/dashboard', methods=['GET'])
 @cross_origin(origin='http://localhost:5173/dashboard', supports_credentials=True)
 def dashBoard():
+    # Get only the userId
+    user_id = request.args.get('userId')
+    # print(f"Received userId: {user_id} in the backend dashboard route")
+    # Call the loadData function with the userId and return the data as JSON
+    # Define the path to the shared library
+    lib_path = os.path.join(os.path.dirname(__file__), '/home/vithursh/Coding/EazApply/backend/Search Engine/FilterSystem/libfilterSystem.so')
+
+    # Load the shared library
+    shared_library = ctypes.CDLL(lib_path)
+
+    # Define the argument and return types
+    shared_library.loadDatabaseData.argtypes = [ctypes.c_char_p]
+    shared_library.loadDatabaseData.restype = ctypes.c_void_p
+
+    # Convert the string to bytes
+    user_id_bytes = user_id.encode('utf-8')
+
+    # Call the function
+    result = shared_library.loadDatabaseData(user_id_bytes)
     return jsonify(receiveJobData()), 200
 
 
-@app.route('/survey/value-in-role', methods=['POST'])
-@cross_origin(origin='http://localhost:5173/survey/value-in-role', supports_credentials=True)
-def valueInRole():
+@app.route('/survey/value-in-role/<uuid>', methods=['POST'])
+@cross_origin(origin='http://localhost:5173', supports_credentials=True)
+def valueInRole(uuid):
+    print(f"In the backend the user is: {uuid}")
     data = request.get_json()
     options = data.get('option', [])
     
@@ -116,6 +137,7 @@ def valueInRole():
     
     try:
         supabase.table('valueinrole').insert({
+            'user_id': uuid,
             'option1': options[0],
             'option2': options[1],
             'option3': options[2]
@@ -126,9 +148,10 @@ def valueInRole():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/survey/roles-interested-in', methods=['POST'])
-@cross_origin(origin='http://localhost:5173/survey/roles-interested-in', supports_credentials=True)
-def rolesInterestedIn():
+@app.route('/survey/roles-interested-in/<uuid>', methods=['POST'])
+@cross_origin(origin='http://localhost:5173', supports_credentials=True)
+def rolesInterestedIn(uuid):
+    print(f"In the backend the user is: {uuid}")
     MAX_SIZE = 5  # The maximum size of the list
     option = request.json['option']
 
@@ -140,14 +163,15 @@ def rolesInterestedIn():
     for i in option:
         print(i)
     
-    supabase.table('rolesinterestedin').insert({'option1': option[0], 'option2': option[1], 'option3': option[2],  'option4': option[3],  'option5': option[4]}).execute()
+    supabase.table('rolesinterestedin').insert({'user_id': uuid, 'option1': option[0], 'option2': option[1], 'option3': option[2],  'option4': option[3],  'option5': option[4]}).execute()
 
     # user = supabase.table('users').insert({'username': username, 'email' : email, 'password': password}).execute()
     return jsonify({'message': 'Data successfully sent'}), 200
 
-@app.route('/survey/like-to-work', methods=['POST'])
-@cross_origin(origin='http://localhost:5173/survey/like-to-work', supports_credentials=True)
-def likeToWork():
+@app.route('/survey/like-to-work/<uuid>', methods=['POST'])
+@cross_origin(origin='http://localhost:5173', supports_credentials=True)
+def likeToWork(uuid):
+    print(f"In the backend the user is: {uuid}")
     MAX_SIZE = 2  # The maximum size of the list
     option = request.json['option']
 
@@ -159,15 +183,16 @@ def likeToWork():
     for i in option:
         print(i)
     
-    supabase.table('liketowork').insert({'option1': option[0], 'option2': option[1]}).execute()
+    supabase.table('liketowork').insert({'user_id': uuid, 'option1': option[0], 'option2': option[1]}).execute()
 
     # user = supabase.table('users').insert({'username': username, 'email' : email, 'password': password}).execute()
     return jsonify({'message': 'Data successfully sent'}), 200
 
 
-@app.route('/survey/level-of-experience', methods=['POST'])
-@cross_origin(origin='http://localhost:5173/survey/level-of-experience', supports_credentials=True)
-def levelOfExperience():
+@app.route('/survey/level-of-experience/<uuid>', methods=['POST'])
+@cross_origin(origin='http://localhost:5173', supports_credentials=True)
+def levelOfExperience(uuid):
+    print(f"In the backend the user is: {uuid}")
     MAX_SIZE = 2  # The maximum size of the list
     option = request.json['option']
 
@@ -179,15 +204,16 @@ def levelOfExperience():
     for i in option:
         print(i)
     
-    supabase.table('levelofexperience').insert({'option1': option[0], 'option2': option[1]}).execute()
+    supabase.table('levelofexperience').insert({'user_id': uuid, 'option1': option[0], 'option2': option[1]}).execute()
 
     # user = supabase.table('users').insert({'username': username, 'email' : email, 'password': password}).execute()
     return jsonify({'message': 'Data successfully sent'}), 200
 
 
-@app.route('/survey/company-size', methods=['POST'])
-@cross_origin(origin='http://localhost:5173/survey/company-size', supports_credentials=True)
-def companySize():
+@app.route('/survey/company-size/<uuid>', methods=['POST'])
+@cross_origin(origin='http://localhost:5173', supports_credentials=True)
+def companySize(uuid):
+    print(f"In the backend the user is: {uuid}")
     MAX_SIZE = 1  # The maximum size of the list
     option = request.json['option']
 
@@ -199,15 +225,16 @@ def companySize():
     for i in option:
         print(i)
     
-    supabase.table('companysize').insert({'option1': option[0]}).execute()
+    supabase.table('companysize').insert({'user_id': uuid, 'option1': option[0]}).execute()
 
     # user = supabase.table('users').insert({'username': username, 'email' : email, 'password': password}).execute()
     return jsonify({'message': 'Data successfully sent'}), 200
 
 
-@app.route('/survey/industries-excited-in', methods=['POST'])
-@cross_origin(origin='http://localhost:5173/survey/industries-excited-in', supports_credentials=True)
-def industriesExcitedIn():
+@app.route('/survey/industries-excited-in/<uuid>', methods=['POST'])
+@cross_origin(origin='http://localhost:5173', supports_credentials=True)
+def industriesExcitedIn(uuid):
+    print(f"In the backend the user is: {uuid}")
     MAX_SIZE = 5  # The maximum size of the list
     option = request.json['option']
 
@@ -219,15 +246,16 @@ def industriesExcitedIn():
     for i in option:
         print(i)
     
-    supabase.table('industriesexcitedin').insert({'option1': option[0], 'option2': option[1], 'option3': option[2], 'option4': option[3], 'option5': option[4]}).execute()
+    supabase.table('industriesexcitedin').insert({'user_id': uuid, 'option1': option[0], 'option2': option[1], 'option3': option[2], 'option4': option[3], 'option5': option[4]}).execute()
 
     # user = supabase.table('users').insert({'username': username, 'email' : email, 'password': password}).execute()
     return jsonify({'message': 'Data successfully sent'}), 200
 
 
-@app.route('/survey/skills-enjoy-working-with', methods=['POST'])
-@cross_origin(origin='http://localhost:5173/survey/skills-enjoy-working-with', supports_credentials=True)
-def skillsEnjoyWorkingWith():
+@app.route('/survey/skills-enjoy-working-with/<uuid>', methods=['POST'])
+@cross_origin(origin='http://localhost:5173', supports_credentials=True)
+def skillsEnjoyWorkingWith(uuid):
+    print(f"In the backend the user is: {uuid}")
     MAX_SIZE = 15  # The maximum size of the list
     option = request.json['option']
 
@@ -239,7 +267,7 @@ def skillsEnjoyWorkingWith():
     for i in option:
         print(i)
     
-    supabase.table('skillsenjoyworkingwith').insert({'option1': option[0], 'option2': option[1], 'option3': option[2], 'option4': option[3], 'option5': option[4], 'option6': option[5], 'option7': option[6], 'option8': option[7], 'option9': option[8], 'option10': option[9], 'option11': option[10], 'option12': option[11], 'option13': option[12], 'option14': option[13], 'option15': option[14]}).execute()
+    supabase.table('skillsenjoyworkingwith').insert({'user_id': uuid, 'option1': option[0], 'option2': option[1], 'option3': option[2], 'option4': option[3], 'option5': option[4], 'option6': option[5], 'option7': option[6], 'option8': option[7], 'option9': option[8], 'option10': option[9], 'option11': option[10], 'option12': option[11], 'option13': option[12], 'option14': option[13], 'option15': option[14]}).execute()
 
     # user = supabase.table('users').insert({'username': username, 'email' : email, 'password': password}).execute()
     return jsonify({'message': 'Data successfully sent'}), 200
@@ -247,9 +275,10 @@ def skillsEnjoyWorkingWith():
 
 def get_user_summary(text) -> list[str]:
     api_key = os.getenv("GEMINI_API_KEY")
+    # Using gemini-2.5-flash
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        "gemini-1.5-flash:generateContent"
+        "gemini-2.5-flash:generateContent"
         f"?key={api_key}"
     )
 
@@ -286,50 +315,37 @@ def get_user_summary(text) -> list[str]:
     return paragraphs
 
 
-def convert_survey_answers_to_paragraph():
-    
+def convert_survey_answers_to_paragraph(userID):
     try:
-        # Get the first row from each table
-        value_in_role = supabase.table('valueinrole').select('*').limit(1).execute()
-        roles_interested = supabase.table('rolesinterestedin').select('*').limit(1).execute()
-        like_to_work = supabase.table('liketowork').select('*').limit(1).execute()
-        minimum_salary = supabase.table('minimumexpectedsalary').select('*').limit(1).execute()
-        level_experience = supabase.table('levelofexperience').select('*').limit(1).execute()
-        company_size = supabase.table('companysize').select('*').limit(1).execute()
-        industries_excited = supabase.table('industriesexcitedin').select('*').limit(1).execute()
-        skills_enjoy = supabase.table('skillsenjoyworkingwith').select('*').limit(1).execute()
+        # Fetch data filtered by the specific userID
+        value_in_role = supabase.table('valueinrole').select('*').eq('user_id', userID).execute()
+        roles_interested = supabase.table('rolesinterestedin').select('*').eq('user_id', userID).execute()
+        like_to_work = supabase.table('liketowork').select('*').eq('user_id', userID).execute()
+        minimum_salary = supabase.table('minimumexpectedsalary').select('*').eq('user_id', userID).execute()
+        level_experience = supabase.table('levelofexperience').select('*').eq('user_id', userID).execute()
+        company_size = supabase.table('companysize').select('*').eq('user_id', userID).execute()
+        industries_excited = supabase.table('industriesexcitedin').select('*').eq('user_id', userID).execute()
+        skills_enjoy = supabase.table('skillsenjoyworkingwith').select('*').eq('user_id', userID).execute()
 
-        # Filter out None values and integers for all tables
-        value_in_role_data = [value for item in value_in_role.data for value in item.values() if value is not None and not isinstance(value, int)]
-        roles_interested_data = [value for item in roles_interested.data for value in item.values() if value is not None and not isinstance(value, int)]
-        like_to_work_data = [value for item in like_to_work.data for value in item.values() if value is not None and not isinstance(value, int)]
-        minimum_salary_data = [value for item in minimum_salary.data for value in item.values() if value is not None and not isinstance(value, int)]
-        level_experience_data = [value for item in level_experience.data for value in item.values() if value is not None and not isinstance(value, int)]
-        company_size_data = [value for item in company_size.data for value in item.values() if value is not None and not isinstance(value, int)]
-        industries_excited_data = [value for item in industries_excited.data for value in item.values() if value is not None and not isinstance(value, int)]
-        skills_enjoy_data = [value for item in skills_enjoy.data for value in item.values() if value is not None and not isinstance(value, int)]
+        # Helper to clean data: removes Nones, integers (like the ID itself), and "NULL" strings
+        def clean_data(response):
+            return [
+                value for item in response.data 
+                for value in item.values() 
+                if value is not None and not isinstance(value, int) and value != "NULL"
+            ]
 
-        # Filter out NULL values for all tables
-        value_in_role_data = [value for value in value_in_role_data if value != "NULL"]
-        roles_interested_data = [value for value in roles_interested_data if value != "NULL"]
-        like_to_work_data = [value for value in like_to_work_data if value != "NULL"]
-        minimum_salary_data = [value for value in minimum_salary_data if value != "NULL"]
-        level_experience_data = [value for value in level_experience_data if value != "NULL"]
-        company_size_data = [value for value in company_size_data if value != "NULL"]
-        industries_excited_data = [value for value in industries_excited_data if value != "NULL"]
-        skills_enjoy_data = [value for value in skills_enjoy_data if value != "NULL"]
+        # Apply cleaning
+        value_in_role_data = clean_data(value_in_role)
+        roles_interested_data = clean_data(roles_interested)
+        like_to_work_data = clean_data(like_to_work)
+        minimum_salary_data = clean_data(minimum_salary)
+        level_experience_data = clean_data(level_experience)
+        company_size_data = clean_data(company_size)
+        industries_excited_data = clean_data(industries_excited)
+        skills_enjoy_data = clean_data(skills_enjoy)
 
-        # Print all data
-        # print("Value in role:", value_in_role_data)
-        # print("Roles interested in:", roles_interested_data)
-        # print("Like to work:", like_to_work_data)
-        # print("Minimum salary:", minimum_salary_data)
-        # print("Level of experience:", level_experience_data)
-        # print("Company size:", company_size_data)
-        # print("Industries excited in:", industries_excited_data)
-        # print("Skills enjoy working with:", skills_enjoy_data)
-
-        # Create a comprehensive human-readable summary
+        # Create summary
         text = f"""
                 Profile Summary:
                 - Values in role: {', '.join(value_in_role_data)}
@@ -345,13 +361,14 @@ def convert_survey_answers_to_paragraph():
         return text
         
     except Exception as e:
-        print(f"Error in getFirstRow: {str(e)}")
+        print(f"Error in convert_survey_answers_to_paragraph: {str(e)}")
         return None
 
 
-@app.route('/survey/minimum-expected-salary', methods=['POST'])
-@cross_origin(origin='http://localhost:5173/survey/minimum-expected-salary', supports_credentials=True)
-def minimumExpectedSalary():
+@app.route('/survey/minimum-expected-salary/<uuid>', methods=['POST'])
+@cross_origin(origin='http://localhost:5173', supports_credentials=True)
+def minimumExpectedSalary(uuid):
+    print(f"In the backend the user is: {uuid}")
     MAX_SIZE = 1  # The maximum size of the list
     option = request.json['option']
 
@@ -367,23 +384,24 @@ def minimumExpectedSalary():
     #     print(i)
     
     # Insert the data into the database
-    supabase.table('minimumexpectedsalary').insert({'option1': option_with_k}).execute()
+    supabase.table('minimumexpectedsalary').insert({'user_id': uuid, 'option1': option_with_k}).execute()
 
-    print("The text is: ", convert_survey_answers_to_paragraph())
+    print("The text is: ", convert_survey_answers_to_paragraph(uuid))
 
-    user_summary = get_user_summary(convert_survey_answers_to_paragraph())
+    user_summary = get_user_summary(convert_survey_answers_to_paragraph(uuid))
 
     # Extract the first summary without brackets
     cleaned_summary = user_summary[0] if user_summary else ""  # Get first element of list
 
     print("The LLM came out with:", cleaned_summary)
 
-    # Replace the insert line with this update operation
-    # .match({'email': request.json.get('email')})\
-    supabase.table('users')\
-        .update({'summary': cleaned_summary})\
-        .match({'email': "Someone123@gmail.com"})\
-        .execute()
+    # Insert the users profile into the database
+    supabase.table('users') \
+    .insert({
+        'user_id': uuid,         # Include the identifier in the insert object
+        'summary': cleaned_summary
+    }) \
+    .execute()
 
     return jsonify({'message': 'Data successfully sent'}), 200
 
