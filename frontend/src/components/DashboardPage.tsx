@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from "axios";
 import '../styles/DashboardPage.css'
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import '../styles/HomePage.css'
 import { useNavigate } from 'react-router-dom';
 import icon from "../../image/icon.png"
 import { BsArrowLeftShort } from "@react-icons/all-files/bs/BsArrowLeftShort";
 import { BsFillPersonFill } from "@react-icons/all-files/bs/BsFillPersonFill";
 import { BsFillHouseDoorFill } from "@react-icons/all-files/bs/BsFillHouseDoorFill";
+import LoadingScreen from './LoadingScreen';
 // import type { Session } from '@supabase/supabase-js';
 // import { Session } from 'inspector';
 import { createBrowserSupabase as createClient } from '../utils/supabase/client';
@@ -86,7 +87,28 @@ export const DashboardContext = () => (
 );
 
 const DashboardPage: React.FC = () => {
+    // The key 'uuid' here must match the name used in your Route path (:uuid)
+    const { uuid } = useParams();
+    console.log("The UUID from the URL is:", uuid); // This should log the correct UUID when the component renders
     const navigate = useNavigate();
+    const getNumberRows = async () => {
+      const { data, error } = await supabase
+        .from('minimumexpectedsalary')
+        .select('id') // Just select one small column to keep it efficient
+        .eq('user_id', uuid);
+
+      if (error) {
+        console.error('Error fetching data:', error);
+      } else if (data.length === 0) {
+        console.log('No data found for this user.');
+        navigate(`/survey/`);
+      } else {
+        console.log('Data exists for this user.');
+      }
+    };
+
+    getNumberRows();
+
     // await supabase.auth.getUser();
     const [session, setSession] = useState<any | null>(null);
 
@@ -111,6 +133,7 @@ const DashboardPage: React.FC = () => {
     const [open, setOpen] = useState(true);
 
     const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const handleLogout = async () => {
       // const navigate = useNavigate(); // Already declared at component level
@@ -138,18 +161,21 @@ const DashboardPage: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/dashboard', { withCredentials: true });
+                const response = await axios.get('http://localhost:5000/dashboard', { params: { userId: uuid }, withCredentials: true });
                 if (response.status === 200) {
                     // Handle successful response
                     console.log("Dashboard data refreshed every 5 seconds...");
                     console.log('Dashboard data:', response.data);
                     setData(response.data);
+                    setLoading(false);
                 } else {
                     // Handle error response
                     console.log('Could not get data!!!');
+                    setLoading(false);
                 }
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
+                setLoading(false);
             }
         };
         fetchData();
@@ -162,6 +188,7 @@ const DashboardPage: React.FC = () => {
 
     return (
         <>
+        {loading && <LoadingScreen />}
         <div className="flex min-h-screen bg-gray-900 text-white">
                 {/* Sidebar */}
                 <aside className={`bg-gray-800 h-screen sticky top-0 pt-8 pl-0 ${open ? "w-70 pr-5 pb-5" : "w-20 pr-5 pb-5"} duration-300 relative flex flex-col items-start`}>

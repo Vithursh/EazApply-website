@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { BsArrowRight } from "react-icons/bs";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
@@ -16,6 +16,9 @@ const buttonLabels = [
   let lengthOfArray = buttonLabels.length;
 
 const LikeToWorkPage: React.FC = () => {
+    // The key 'uuid' here must match the name used in your Route path (:uuid)
+    const { uuid } = useParams();
+    console.log("The UUID from the URL is:", uuid); // This should log the correct UUID when the component renders
     const navigate = useNavigate();
     const [isClicked, setIsClicked] = useState(Array(buttonLabels.length).fill(false));
 
@@ -46,7 +49,7 @@ const LikeToWorkPage: React.FC = () => {
       if (clickedLabels.length > 0 && clickedLabels.length < 3) {
         console.log(clickedLabels.length);
         try {
-          const response = await axios.post('http://localhost:5000/survey/like-to-work', {
+          const response = await axios.post(`http://localhost:5000/survey/like-to-work/${uuid}`, {
             option: clickedLabels
           }, {
             headers: {
@@ -62,7 +65,7 @@ const LikeToWorkPage: React.FC = () => {
             alert(result.error);
           }
     
-          navigate('/survey/level-of-experience');
+          navigate(`/survey/level-of-experience/${uuid}`);
         } catch (error) {
           console.error(`Error: ${error}`);
         }

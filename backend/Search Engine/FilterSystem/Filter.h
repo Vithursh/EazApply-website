@@ -21,8 +21,8 @@ class FilterSystem {
     "\0", "\b", "\r"  // Control characters
     };
     FilterSystem() {};
-    void loadDatabaseData();
-    std::string getUserSummary(const std::string& userEmail);
+    void loadDatabaseData(string userId);
+    std::string getUserSummary(const std::string& userId);
     bool extractWordsFromString(const char* str);
 
     // Getters
@@ -47,4 +47,10 @@ class FilterSystem {
 
     ~FilterSystem() {};
 };
+
+// Functions pyhton can access
+extern "C" {
+    void loadDatabaseData(const char* userId);
+}
+
 #endif

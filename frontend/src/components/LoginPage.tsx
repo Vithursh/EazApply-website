@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import '../styles/LoginPage.css'
 import RegisterPage from './RegisterPage';
 import Navbar from './Navbar';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from "../utils/supabaseClient";
 
 //
@@ -26,6 +26,7 @@ const LoginPage: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     // Notifcation 
     const notify = (message : string) => {
@@ -50,29 +51,32 @@ const LoginPage: React.FC = () => {
         event.preventDefault();
         setLoading(true);
 
-        const { error } = await supabase.auth.signInWithPassword({
+        if (!email) {
+            notify("Please enter an email address.");
+            setLoading(false);
+            return;
+        } else if (!password) {
+            notify("Please enter a password.");
+            setLoading(false);
+            return;
+        }
+
+        const { error, data } = await supabase.auth.signInWithPassword({
             email: email,
             password: password,
         });
        
-        if (!email) {
-            notify("Please enter an email address.");
-            // Redirect to login page or show a modal
-            return;
-        } else if (!password) {
-            notify("Please enter a password.");
-            // Redirect to login page or show a modal
-            return;
+        if (error) {
+            notify(error.message);
+            setLoading(false);
         } else {
-            if (error?.status)
-                notify(error.message);
-            else
-                notify("Login success!!!");
+            notify("Login success!!!");
+            setEmail("");
+            setPassword("");
+            setLoading(false);
+            // Navigate to dashboard after successful login
+            navigate("/dashboard/" + data.user?.id);
         }
-
-        setLoading(false);
-        setEmail("");
-        setPassword("");
     };    
 
     return (

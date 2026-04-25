@@ -4,12 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
 
 const buttonLabels = ['Diversity & Inclusion', 'Impactful Work', 'Innovation & Tech', 'Mentorship & Career Development', 'Progressive Leadership', 'Recognition & Reward', 'Role Mobility', 'Social Responsibility & Sustainability', 'Transparency & Communication', 'Work-life balance'];
 
 let lengthOfArray = buttonLabels.length;
 
 const ValueInRolePage: React.FC = () => {
+    // The key 'uuid' here must match the name used in your Route path (:uuid)
+    const { uuid } = useParams();
+    console.log("The UUID from the URL is:", uuid); // This should log the correct UUID when the component renders
     const navigate = useNavigate();
     const [isClicked, setIsClicked] = useState(Array(buttonLabels.length).fill(false));
 
@@ -54,7 +58,7 @@ const ValueInRolePage: React.FC = () => {
       if (clickedLabels.length > 0 && clickedLabels.length < 4) {
         console.log(clickedLabels.length);
         try {
-          const response = await axios.post('http://localhost:5000/survey/value-in-role', {
+          const response = await axios.post(`http://localhost:5000/survey/value-in-role/${uuid}`, {
             option: clickedLabels
           }, {
             headers: {
@@ -70,7 +74,7 @@ const ValueInRolePage: React.FC = () => {
             alert(result.error);
           }
     
-          navigate('/survey/roles-interested-in');
+          navigate(`/survey/roles-interested-in/${uuid}`);
         } catch (error) {
           console.error(`Error: ${error}`);
         }

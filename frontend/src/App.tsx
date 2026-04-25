@@ -42,7 +42,7 @@ function AuthStateListener() {
       console.log('The session for App is:', session);
       // If user is logged in and tries to access login or register page, redirect to dashboard
       if (session && (window.location.pathname === '/login' || window.location.pathname === '/register' || window.location.pathname === '/')) {
-        navigate('/dashboard');
+        navigate(`/dashboard/${session.user.id}`);
       }
       // If user is logged out and tries to access a protected route, redirect to homepage
       if (!session && window.location.pathname !== '/login' && window.location.pathname !== '/register' && window.location.pathname !== '/forgot') {
@@ -78,16 +78,17 @@ function App() {
 
               {/* Protected routes wrapped in the ProtectedRoute component */}
               <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/dashboard/:uuid" element={<DashboardPage />} />
                 <Route path="/survey" element={<SurveyPage />} />
-                <Route path="/survey/value-in-role" element={<ValueInRolePage />} />
-                <Route path="/survey/roles-interested-in" element={<RolesInterestedInPage />} />
-                <Route path="/survey/like-to-work" element={<LikeToWorkPage />} />
-                <Route path="/survey/level-of-experience" element={<LevelOfExperiencePage />} />
-                <Route path="/survey/company-size" element={<CompanySizePage />} />
-                <Route path="/survey/industries-excited-in" element={<IndustriesExcitedInPage />} />
-                <Route path="/survey/skills-enjoy-working-with" element={<SkillsEnjoyWorkingWithPage />} />
-                <Route path="/survey/minimum-expected-salary" element={<MinimumExpectedSalaryPage />} />
+                {/* <Route path="/survey/value-in-role" element={<ValueInRolePage />} /> */}
+                <Route path="/survey/value-in-role/:uuid" element={<ValueInRolePage />} />
+                <Route path="/survey/roles-interested-in/:uuid" element={<RolesInterestedInPage />} />
+                <Route path="/survey/like-to-work/:uuid" element={<LikeToWorkPage />} />
+                <Route path="/survey/level-of-experience/:uuid" element={<LevelOfExperiencePage />} />
+                <Route path="/survey/company-size/:uuid" element={<CompanySizePage />} />
+                <Route path="/survey/industries-excited-in/:uuid" element={<IndustriesExcitedInPage />} />
+                <Route path="/survey/skills-enjoy-working-with/:uuid" element={<SkillsEnjoyWorkingWithPage />} />
+                <Route path="/survey/minimum-expected-salary/:uuid" element={<MinimumExpectedSalaryPage />} />
               </Route>
 
             </Routes>

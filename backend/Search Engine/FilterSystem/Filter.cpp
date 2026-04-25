@@ -24,7 +24,7 @@
 
 using namespace std;
 
-void FilterSystem::loadDatabaseData() {
+void FilterSystem::loadDatabaseData(string userId) {
     // Add all the words & URL from the database into the vector
     sqlite3_stmt *stmt{};
     sqlite3* DB{};
@@ -52,10 +52,8 @@ void FilterSystem::loadDatabaseData() {
     
     int count = 0;
 
-    string usersSummary{};
-
     string env_variable = std::getenv("GEMINI_API_KEY");
-    string userSummary = getUserSummary("Someone123@gmail.com");
+    string userSummary = getUserSummary(userId);
 
     // Loop through the results, a row at a time.
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -74,7 +72,15 @@ void FilterSystem::loadDatabaseData() {
         if (count % 5 == 0 && count != 0) {
             std::cout << "Sleeping for 1 minute..." << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(20));
-            tempInstance.setRank(cosine_similarity(embedText(env_variable, usersSummary), embedText(env_variable, paragraphStr)));
+            if (userSummary.empty()) {
+                cout << "The user summary is: [" << userSummary << "]" << endl;
+                throw std::runtime_error("User summary is empty. Cannot compute cosine similarity.");
+            } else if (paragraphStr.empty()) {
+                throw std::runtime_error("Paragraph is empty. Cannot compute cosine similarity.");
+            } else {
+                std::cout << "Computing cosine similarity..." << std::endl;
+                tempInstance.setRank(cosine_similarity(embedText(env_variable, userSummary), embedText(env_variable, paragraphStr)));
+            }
             std::cout << "Awake now!" << std::endl;
         }
         // auto emb = embedText(env_variable, paragraphStr);
@@ -120,7 +126,8 @@ void FilterSystem::loadDatabaseData() {
 
         // Write some data
         for (auto& data : m_dataBaseData) {
-            outputFile << data.getRank() << "|" << data.getWebsiteURL() << "|" << data.getParagraph() << "|" << data.getWebsiteTitle() << std::endl;
+            if (data.getRank() > 0.0)
+                outputFile << data.getRank() << "|" << data.getWebsiteURL() << "|" << data.getParagraph() << "|" << data.getWebsiteTitle() << std::endl;
         }
         
         outputFile.close();
@@ -148,12 +155,15 @@ void FilterSystem::loadDatabaseData() {
     cout << endl;
 }
 
-std::string FilterSystem::getUserSummary(const std::string& userEmail) {
+std::string FilterSystem::getUserSummary(const std::string& userId) {
     CURL* curl = curl_easy_init();
     std::string response;
 
-    const std::string& supabaseUrl = std::getenv("REACT_APP_SUPABASE_URL");
-    const std::string& supabaseKey = std::getenv("REACT_APP_SUPABASE_KEY");;
+    const std::string& supabaseUrl = std::getenv("VITE_SUPABASE_URL");
+    const std::string& supabaseKey = std::getenv("VITE_SUPABASE_ANON_KEY");
+
+    cout << "Supabase URL: " << supabaseUrl << endl;
+    cout << "Supabase Key: " << supabaseKey << endl;
     
     if (!curl) {
         throw std::runtime_error("Failed to initialize CURL");
@@ -161,7 +171,7 @@ std::string FilterSystem::getUserSummary(const std::string& userEmail) {
 
     try {
         // Construct the API URL to only get the summary field
-        std::string url = supabaseUrl + "/rest/v1/users?select=summary&email=eq." + userEmail;
+        std::string url = supabaseUrl + "/rest/v1/users?select=summary&user_id=eq." + userId;
         
         // Set up Supabase headers
         struct curl_slist* headers = nullptr;
@@ -178,8 +188,8 @@ std::string FilterSystem::getUserSummary(const std::string& userEmail) {
         CURLcode res = curl_easy_perform(curl);
         
         // Clean up
-        curl_slist_free_all(headers);
-        curl_easy_cleanup(curl);
+        // curl_slist_free_all(headers);
+        // curl_easy_cleanup(curl);
         
         if (res != CURLE_OK) {
             throw std::runtime_error("CURL request failed: " + std::string(curl_easy_strerror(res)));
@@ -187,11 +197,44 @@ std::string FilterSystem::getUserSummary(const std::string& userEmail) {
         
         // Parse JSON response to get just the summary field
         auto jsonResponse = nlohmann::json::parse(response);
-        if (!jsonResponse.empty() && jsonResponse[0].contains("summary")) {
-            return jsonResponse[0]["summary"].get<std::string>();
+
+        if (jsonResponse.is_object()) {
+            if (jsonResponse.contains("summary")) {
+                cout << "Summary found in JSON object." << endl;
+                return jsonResponse["summary"].get<std::string>();
+            } else {
+                // This is where your code was likely falling through!
+                cout << "It's an object, but 'summary' key is missing." << endl;
+                cout << "Keys found: " << jsonResponse.dump() << endl; 
+            }
+        } 
+        else if (jsonResponse.is_array() && !jsonResponse.empty()) {
+            if (jsonResponse[0].contains("summary")) {
+                cout << "Summary found in JSON array." << endl;
+                
+                // Check if the value is actually null in the database
+                if (jsonResponse[0]["summary"].is_null()) {
+                    cout << "The summary field exists but it is NULL in the database." << endl;
+                    return "";
+                }
+
+                auto summaryValue = jsonResponse[0]["summary"].get<std::string>();
+                
+                // ADD THIS LINE:
+                cout << "Summary content: [" << summaryValue << "]" << endl;
+                
+                return jsonResponse[0]["summary"].get<std::string>();
+            }
+        }
+        else if (jsonResponse.is_string()) {
+            // Maybe the API returned the summary directly as a raw string?
+            cout << "Summary found as a raw string." << endl;
+            return jsonResponse.get<std::string>();
         }
         
-        return ""; // Return empty string if no summary found
+        // Log the actual type to find the culprit
+        cerr << "Error: Received unexpected JSON type: " << jsonResponse.type_name() << endl;
+        return ""; // or throw an exception
         
     } catch (const std::exception& e) {
         if (curl) curl_easy_cleanup(curl);
@@ -208,9 +251,7 @@ size_t FilterSystem::WriteCallback(void* contents, size_t size, size_t nmemb, vo
 
 std::vector<float> FilterSystem::embedText(const std::string& apiKey, const std::string& text) {
     // 1) Correct URL
-    std::string url =
-      "https://generativelanguage.googleapis.com/v1beta/models/"
-      "text-embedding-004:embedContent?key=" + apiKey;
+    std::string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=" + apiKey;
 
     // std::string url =
     // "https://generativelanguage.googleapis.com/v1beta/models/"
@@ -344,4 +385,15 @@ bool FilterSystem::extractWordsFromString(const char* str) {
     }
 
     return containsSpaces;
+}
+
+extern "C" {
+
+	FilterSystem filterInstance;
+
+	void loadDatabaseData(const char* userId) {
+		cout << "The data recived from c++ is: " << userId << endl;
+		string userIdString = userId;
+		filterInstance.loadDatabaseData(userIdString);
+	}
 }

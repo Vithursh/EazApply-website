@@ -1,16 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import '../styles/Navbar.css';
+import { Session } from '@supabase/supabase-js' // Import the type
+
+import { supabase } from '../utils/supabaseClient';
+
 
 const Navbar = () => {
   // State to control the visibility of the dropdown menu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const [session, setSession] = useState<Session | null>(null)
+
   // Function to toggle the dropdown menu
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  useEffect(() => {
+    // Check for existing session first
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Current session:', session);
+      setSession(session);
+    });
+
+    // Then listen for auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session);
+      setSession(session);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (session)
+    return;
 
   return (
     <nav className="bg-gray-800 p-2 mt-0 fixed w-full z-10 top-0">
