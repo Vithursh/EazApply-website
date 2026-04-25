@@ -42,7 +42,7 @@ function AuthStateListener() {
       console.log('The session for App is:', session);
       // If user is logged in and tries to access login or register page, redirect to dashboard
       if (session && (window.location.pathname === '/login' || window.location.pathname === '/register' || window.location.pathname === '/')) {
-        navigate('/dashboard');
+        navigate(`/dashboard/${session.user.id}`);
       }
       // If user is logged out and tries to access a protected route, redirect to homepage
       if (!session && window.location.pathname !== '/login' && window.location.pathname !== '/register' && window.location.pathname !== '/forgot') {

@@ -90,6 +90,24 @@ const DashboardPage: React.FC = () => {
     const { uuid } = useParams();
     console.log("The UUID from the URL is:", uuid); // This should log the correct UUID when the component renders
     const navigate = useNavigate();
+    const getNumberRows = async () => {
+      const { data, error } = await supabase
+        .from('minimumexpectedsalary')
+        .select('id') // Just select one small column to keep it efficient
+        .eq('user_id', uuid);
+
+      if (error) {
+        console.error('Error fetching data:', error);
+      } else if (data.length === 0) {
+        console.log('No data found for this user.');
+        navigate(`/survey/`);
+      } else {
+        console.log('Data exists for this user.');
+      }
+    };
+
+    getNumberRows();
+
     // await supabase.auth.getUser();
     const [session, setSession] = useState<any | null>(null);
 
