@@ -8,6 +8,7 @@ import icon from "../../image/icon.png"
 import { BsArrowLeftShort } from "@react-icons/all-files/bs/BsArrowLeftShort";
 import { BsFillPersonFill } from "@react-icons/all-files/bs/BsFillPersonFill";
 import { BsFillHouseDoorFill } from "@react-icons/all-files/bs/BsFillHouseDoorFill";
+import LoadingScreen from './LoadingScreen';
 // import type { Session } from '@supabase/supabase-js';
 // import { Session } from 'inspector';
 import { createBrowserSupabase as createClient } from '../utils/supabase/client';
@@ -132,6 +133,7 @@ const DashboardPage: React.FC = () => {
     const [open, setOpen] = useState(true);
 
     const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const handleLogout = async () => {
       // const navigate = useNavigate(); // Already declared at component level
@@ -165,12 +167,15 @@ const DashboardPage: React.FC = () => {
                     console.log("Dashboard data refreshed every 5 seconds...");
                     console.log('Dashboard data:', response.data);
                     setData(response.data);
+                    setLoading(false);
                 } else {
                     // Handle error response
                     console.log('Could not get data!!!');
+                    setLoading(false);
                 }
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
+                setLoading(false);
             }
         };
         fetchData();
@@ -183,6 +188,7 @@ const DashboardPage: React.FC = () => {
 
     return (
         <>
+        {loading && <LoadingScreen />}
         <div className="flex min-h-screen bg-gray-900 text-white">
                 {/* Sidebar */}
                 <aside className={`bg-gray-800 h-screen sticky top-0 pt-8 pl-0 ${open ? "w-70 pr-5 pb-5" : "w-20 pr-5 pb-5"} duration-300 relative flex flex-col items-start`}>
